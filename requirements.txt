@@ -1,2 +1,5 @@
-django==5.1.7
- mysqlclient==2.2.7
+flask==3.1.0
+flask_sqlalchemy==3.1.1
+flask_apscheduler==1.13.1
+flask_security==5.6.1
+flask_migrate==4.1.0
