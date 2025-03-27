@@ -16,6 +16,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     date_joined = db.Column(db.DateTime, server_default=db.func.now())
+    fs_uniquifier=db.Column(db.String(64),unique=True)
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('users', lazy='dynamic'))
 
     def __repr__(self):
