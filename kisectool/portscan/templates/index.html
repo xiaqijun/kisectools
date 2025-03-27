@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>资产查询</h2>
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <label for="ip" class="form-label">IP地址:</label>
+            <input type="text" id="ip" name="ip" class="form-control">
+        </div>
+        <div class="col-md-3 mb-3">
+            <label for="port" class="form-label">端口:</label>
+            <input type="text" id="port" name="port" class="form-control">
+        </div>
+        <div class="col-md-3 mb-3">
+            <label for="service" class="form-label">服务:</label>
+            <input type="text" id="service" name="service" class="form-control">
+        </div>
+        <div class="col-md-3 mb-3">
+            <label for="banner" class="form-label">Banner:</label>
+            <input type="text" id="banner" name="banner" class="form-control">
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">查询</button>
+</form>
+
+<div class="row">
+    <div class="col-md-6">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>IP地址</th>
+                    <th>ICMP状态</th>
+                    <th>创建时间</th>
+                    <th>更新时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if asset_page_obj %}
+                    {% for asset in asset_page_obj %}
+                    <tr>
+                        <td><a href="?selected_ip={{ asset.ip }}{% if request.GET.ip %}&ip={{ request.GET.ip }}{% endif %}{% if request.GET.port %}&port={{ request.GET.port }}{% endif %}{% if request.GET.service %}&service={{ request.GET.service }}{% endif %}{% if request.GET.banner %}&banner={{ request.GET.banner }}{% endif %}">{{ asset.ip }}</a></td>
+                        <td>{{ asset.icmp_status }}</td>
+                        <td>{{ asset.create_time }}</td>
+                        <td>{{ asset.update_time }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">没有资产数据</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div>
+            <span>第 {{ asset_page_obj.number }} 页，共 {{ asset_page_obj.paginator.num_pages }} 页</span>
+            <div class="pagination">
+                <span class="page-link">{% if asset_page_obj.has_previous %}<a href="?{% if request.GET.ip %}ip={{ request.GET.ip }}&{% endif %}{% if request.GET.port %}port={{ request.GET.port }}&{% endif %}{% if request.GET.service %}service={{ request.GET.service }}&{% endif %}{% if request.GET.banner %}banner={{ request.GET.banner }}&{% endif %}asset_page={{ asset_page_obj.previous_page_number }}">上一页</a>{% else %}上一页{% endif %}</span>
+                <span class="page-link">{% if asset_page_obj.has_next %}<a href="?{% if request.GET.ip %}ip={{ request.GET.ip }}&{% endif %}{% if request.GET.port %}port={{ request.GET.port }}&{% endif %}{% if request.GET.service %}service={{ request.GET.service }}&{% endif %}{% if request.GET.banner %}banner={{ request.GET.banner }}&{% endif %}asset_page={{ asset_page_obj.next_page_number }}">下一页</a>{% else %}下一页{% endif %}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        {% if selected_ports %}
+        <h3>IP: {{ selected_ip }} 的端口信息</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>端口</th>
+                    <th>服务</th>
+                    <th>Banner</th>
+                    <th>创建时间</th>
+                    <th>更新时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for port in selected_ports %}
+                <tr>
+                    <td>{{ port.port }}</td>
+                    <td>{{ port.service }}</td>
+                    <td>{{ port.banner }}</td>
+                    <td>{{ port.create_time }}</td>
+                    <td>{{ port.update_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-center">请选择一个IP地址以查看端口信息</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
