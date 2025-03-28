@@ -32,7 +32,6 @@ def create_app(config_class='config.Config'):
     with app.app_context():
         db.create_all()
     # 注册蓝图
-    
     with app.app_context():
         db.create_all()
         # 创建默认角色和用户
