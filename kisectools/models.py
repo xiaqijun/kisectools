@@ -29,3 +29,16 @@ user_roles = db.Table(
     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'))
 )
+
+class task(db.Model):
+    __tablename__ = 'task'
+    id = db.Column(db.Integer, primary_key=True)
+    task_name = db.Column(db.String(150), unique=True, nullable=False)
+    task_desc = db.Column(db.String(255))
+    task_status = db.Column(db.Boolean, default=False)
+    task_time = db.Column(db.DateTime, server_default=db.func.now())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', backref=db.backref('tasks', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Task {self.task_name}>'

@@ -26,8 +26,6 @@ def create_app(config_class='config.Config'):
     from .models import User, Role  # 假设 User 和 Role 模型已定义
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security.init_app(app, user_datastore)
-    from .login import login_bp
-    app.register_blueprint(login_bp)
     # 确保数据库表已创建
     with app.app_context():
         db.create_all()
