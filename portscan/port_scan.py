@@ -5,7 +5,10 @@ from socket import *
 from scapy.layers.inet import IP,TCP, UDP
 import requests
 from scapy.sendrecv import sr1, send
-
+import urllib3
+import warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 PROBES = [
     '\r\n\r\n',
     'GET / \r\n\r\n',
