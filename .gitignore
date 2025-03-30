@@ -1,2 +1,4 @@
 /venv
 /migrations
+/kisectools/__pycache__
+/portscan/__pycache__

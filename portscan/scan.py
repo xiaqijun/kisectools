@@ -62,7 +62,7 @@ class Portscan:
                     break
                 ip, port = ip_port
                 result = port_scan(ip, port, self.timeout)
-                if result:
+                if result['status'] == 'Opened':
                     with self.lock:
                         self.results.append(result)
                 queue.task_done()
@@ -72,3 +72,4 @@ class Portscan:
             for _ in range(self.threads):
                 executor.submit(consumer)
         queue.join()
+        return self.results

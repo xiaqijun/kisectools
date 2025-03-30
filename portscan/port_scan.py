@@ -176,32 +176,19 @@ def port_scan(host,port=80,timeout=5):
     banner='Null'
     title=''
     port = int(port)
-    #返回端口开放情况host, port, '1'
-    # tcp_syn_result = scapy_tcp_syn_scan(host,port)
-    # if tcp_syn_result[2] == '1':
-    #     scan_result = scan_service(host,port,timeout)
-    #     service =scan_result[2]
-    #     banner = scan_result[3]
-    #     title =  scan_result[4]
-    #     status  = 'Opened'
-    # else:
-    # udp_result = scapy_udp_scan(host,port)
-    # if udp_result[2] == '1':
-    #     scan_result = scan_service(host, port, timeout)
-    #     service = scan_result[2]
-    #     banner = scan_result[3]
-    #     title = scan_result[4]
-    #     status = 'Opened'
-    #     else:
     socket_result = socket_scan(host,port,timeout)
     if socket_result[2] == '1':
-        # host, port, status,service, Banner, title
         scan_result = scan_service(host, port, timeout)
         service = scan_result[2]
         banner = scan_result[3]
         title = scan_result[4]
         status = 'Opened'
-    return host,port, status, service, banner, title
+    return {
+        'host': host,
+        'port': port,
+        'status': status,
+        'service': service,
+    }
 
 #
 def scan_service(host,port=80,timeout=5):
