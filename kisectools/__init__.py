@@ -22,10 +22,11 @@ def create_app(config_class='config.Config'):
         scheduler.start()
 
     # 配置 Flask-Security
-
     from .models import User, Role  # 假设 User 和 Role 模型已定义
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security.init_app(app, user_datastore)
+    from .task import task_bp  # 导入任务相关的蓝图
+    app.register_blueprint(task_bp, url_prefix='/task')  # 注册任务相关的蓝图
     # 确保数据库表已创建
     with app.app_context():
         db.create_all()
