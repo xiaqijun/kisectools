@@ -1,5 +1,5 @@
-/kisectools/config.py/
 /kisectools/__pycache__
 /venv
 /migrations
 /portscan/__pycache__
+**/config.py
