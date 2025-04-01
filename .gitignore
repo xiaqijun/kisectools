@@ -2,3 +2,4 @@
 /migrations
 /kisectools/__pycache__
 /portscan/__pycache__
+/kisectools/config.py
