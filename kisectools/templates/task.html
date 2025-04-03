@@ -6,6 +6,9 @@
 
 {% block content %}
 <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary">新增</button>
+    </div>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -64,4 +67,7 @@
         当前第 {{ tasks.page }} 页，每页 {{ tasks.per_page }} 条，共 {{ tasks.total }} 条数据。
     </p>
 </div>
+<script>
+    
+</script>
 {% endblock %}

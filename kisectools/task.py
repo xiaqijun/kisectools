@@ -26,4 +26,18 @@ def task():
         ]
     }
     return render_template('task.html', tasks=responses)
+@task_bp.route('/add',methonds=['POST'])
+@login_required
+def add_task():
+    task_name=request.form.get('task_name')
+    task_status=request.form.get('task_status')
+    task_time=request.form.get('task_time')
+    user_id=request.form.get('user_id')
+    try:
+        task=Task(task_name=task_name,task_status=task_status,task_time=task_time,user_id=user_id)
+        db.session.add(task)
+        db.session.commit()
+        return {"result":"任务添加成功"}
+    except Exception as e:
+        return e
     
