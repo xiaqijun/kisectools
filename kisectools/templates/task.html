@@ -6,8 +6,6 @@
 
 {% block content %}
 <div class="container">
-    <h2>任务列表</h2>
-    {% if tasks %}
     <table class="table table-striped">
         <thead>
             <tr>
@@ -34,27 +32,36 @@
             {% endfor %}
         </tbody>
     </table>
-    <nav>
-        <ul class="pagination">
-            <li class="page-item {% if not tasks.has_prev %}disabled{% endif %}">
-                <a class="page-link" href="?page={{ tasks.prev_num }}" aria-label="Previous">
+    <nav class="d-flex justify-content-between align-items-center">
+        <ul class="pagination mb-0">
+            {% set total_pages = (tasks.total // tasks.per_page) + (1 if tasks.total % tasks.per_page > 0 else 0) %}
+            <li class="page-item {% if tasks.page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ tasks.page - 1 if tasks.page > 1 else 1 }}&per_page={{ tasks.per_page }}" aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
-            {% for page_num in tasks.iter_pages() %}
+            {% for page_num in range(1, total_pages + 1) %}
             <li class="page-item {% if page_num == tasks.page %}active{% endif %}">
-                <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                <a class="page-link" href="?page={{ page_num }}&per_page={{ tasks.per_page }}">{{ page_num }}</a>
             </li>
             {% endfor %}
-            <li class="page-item {% if not tasks.has_next %}disabled{% endif %}">
-                <a class="page-link" href="?page={{ tasks.next_num }}" aria-label="Next">
+            <li class="page-item {% if tasks.page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ tasks.page + 1 if tasks.page < total_pages else total_pages }}&per_page={{ tasks.per_page }}" aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
         </ul>
+        <form method="get" class="d-inline-block ms-3">
+            <label for="per_page" class="me-2">每页显示数量:</label>
+            <select id="per_page" name="per_page" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                <option value="5" {% if tasks.per_page == 5 %}selected{% endif %}>5</option>
+                <option value="10" {% if tasks.per_page == 10 %}selected{% endif %}>10</option>
+                <option value="20" {% if tasks.per_page == 20 %}selected{% endif %}>20</option>
+            </select>
+        </form>
     </nav>
-    {% else %}
-    <p>没有任务可显示。</p>
-    {% endif %}
+    <p class="text-center mt-3">
+        当前第 {{ tasks.page }} 页，每页 {{ tasks.per_page }} 条，共 {{ tasks.total }} 条数据。
+    </p>
 </div>
 {% endblock %}

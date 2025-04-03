@@ -3,7 +3,7 @@ from flask_security import login_required
 from . import db
 from .models import Task, Task_result
 task_bp = Blueprint('task', __name__)
-@task_bp.route('/index', methods=['GET'])
+@task_bp.route('/', methods=['GET'])
 @login_required
 def task():
     page=request.args.get('page',1,type=int)
