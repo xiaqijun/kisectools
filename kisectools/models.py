@@ -49,3 +49,10 @@ class Task_result(db.Model):
     status= db.Column(db.String(150), nullable=False)
     service= db.Column(db.String(150), nullable=False)
     create_time = db.Column(db.DateTime, server_default=db.func.now())
+
+class Plugins(db.Model):
+    __tablename__ = 'plugins'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), unique=True, nullable=False)
+    type = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.String(255))
