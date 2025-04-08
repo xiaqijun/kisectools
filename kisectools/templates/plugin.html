@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}插件管理{% endblock %}
+
+{% block header %}插件管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>插件列表</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>插件名称</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 插件数据将在这里动态加载 -->
+            <tr>
+                <td>示例插件</td>
+                <td>1.0.0</td>
+                <td>启用</td>
+                <td>
+                    <button class="btn btn-sm btn-primary">编辑</button>
+                    <button class="btn btn-sm btn-danger">删除</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
