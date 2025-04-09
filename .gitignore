@@ -3,5 +3,4 @@
 /migrations
 /portscan/__pycache__
 **/config.py
-/plugins/__pycache__
-/plugins/zoomeye/tmp
+/plugins/

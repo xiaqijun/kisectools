@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}插件管理{% endblock %}
+
+{% block header %}插件管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#installPluginModal">安装插件</button>
+    </div>
+    <!-- 模态框 -->
+    <div class="modal fade" id="installPluginModal" tabindex="-1" aria-labelledby="installPluginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="installPluginModalLabel">安装插件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="githubUrl" class="form-label">Git地址</label>
+                            <input class="form-control" type="url" id="githubUrl" name="github_url" placeholder="输入插件的 Git 地址" required>
+                        </div>
+                        <button id="download_plugin" type="submit" class="btn btn-primary">下载并安装</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模态框结束 -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>插件名称</th>
+                <th>状态</th>
+                <th>描述</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plugin in plugins.data %}
+            <tr>
+                <td>{{ plugin.name }}</td>
+                <td>{{ plugin.status }}</td>
+                <td>{{ plugin.description }}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary">启用</button>
+                    <button class="btn btn-sm btn-danger">删除</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav>
+        <ul class="pagination">
+            {% if plugins.page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ plugins.page - 1 }}&per_page={{ plugins.per_page }}">上一页</a>
+            </li>
+            {% endif %}
+            {% if plugins.page < (plugins.total // plugins.per_page) + 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ plugins.page + 1 }}&per_page={{ plugins.per_page }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() { 
+        const downloadButton = document.getElementById("download_plugin"); //
+        downloadButton.addEventListener("click", function(event) {
+            const githubUrl = document.getElementById("githubUrl").value;
+            const gitUrlPattern = /^(https:\/\/|git@)([\w.-]+)(:[\d]+)?(\/|:)([\w./-]+)(\.git)$/;
+            if (!githubUrl && !gitUrlPattern.test(githubUrl)) {
+                event.preventDefault();
+                alert("请输入有效的 Git 地址（例如：https://github.com/user/repo.git）。");
+            } else {
+                // 这里可以添加额外的验证或处理逻辑
+            }
+        });
+        
+    });
+</script>
+{% endblock %}
