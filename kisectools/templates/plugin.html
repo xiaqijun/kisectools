@@ -19,6 +19,7 @@
                 </div>
                 <div class="modal-body">
                     <form method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="githubUrl" class="form-label">Git地址</label>
                             <input class="form-control" type="url" id="githubUrl" name="github_url" placeholder="输入插件的 Git 地址" required>
@@ -70,18 +71,36 @@
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function() { 
-        const downloadButton = document.getElementById("download_plugin"); //
-        downloadButton.addEventListener("click", function(event) {
+        const downloadButton = document.getElementById("download_plugin");
+        downloadButton.addEventListener("click", async function(event) {
+            event.preventDefault(); // 阻止默认提交
+
             const githubUrl = document.getElementById("githubUrl").value;
             const gitUrlPattern = /^(https:\/\/|git@)([\w.-]+)(:[\d]+)?(\/|:)([\w./-]+)(\.git)$/;
-            if (!githubUrl && !gitUrlPattern.test(githubUrl)) {
-                event.preventDefault();
+
+            if (!githubUrl || !gitUrlPattern.test(githubUrl)) {
                 alert("请输入有效的 Git 地址（例如：https://github.com/user/repo.git）。");
-            } else {
-                // 这里可以添加额外的验证或处理逻辑
+                return;
+            }
+
+            try {
+                
+                const response = await axios.post('/plugin/install', { url: githubUrl }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true // 确保发送会话 cookie
+                });
+                console.log(1)
+                if (response.status === 200) {
+                    alert(response.data.message || '插件安装成功！');
+                    location.reload();
+                }
+            } catch (error) {
+                alert(error)
+                alert(error.response?.data?.message || '安装插件失败，请稍后重试。');
             }
         });
-        
     });
 </script>
 {% endblock %}

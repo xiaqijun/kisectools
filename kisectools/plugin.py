@@ -4,6 +4,7 @@ from . import db
 from .models import Plugins
 import os
 import subprocess
+import json
 
 plugin_bp = Blueprint('plugin', __name__)
 
@@ -33,11 +34,33 @@ def plugin():
 @plugin_bp.route('/install', methods=['POST'])
 @login_required
 def install_plugin():
-    url=request.json.get('url')
+    url = request.json.get('url')
     plugins_dir = os.path.join(os.path.dirname(__file__), 'plugins')
     os.makedirs(plugins_dir, exist_ok=True)
     try:
-        subprocess.run(['git', 'clone', url, plugins_dir], check=True)
-        
+        plugin_name = url.split('/')[-1].replace('.git', '')
+        plugin_path = os.path.join(plugins_dir, plugin_name)
+        subprocess.run(['git', 'clone', url, plugin_path], check=True)
+        config_path = os.path.join(plugin_path, 'config.json')
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as config_file:
+                config_data = json.load(config_file)
+            name = config_data.get('name')
+            description = config_data.get('description')
+            class_name = config_data.get('class_name')
+            plugin_url = url
+            plugin = Plugins(
+                name=name,
+                description=description,
+                class_name=class_name,
+                status=0,
+                file_url=plugin_path,
+                plugin_url=plugin_url
+            )
+            db.session.add(plugin)
+            db.session.commit()
+            return {'message': 'Plugin installed successfully'}, 200
+        else:
+            return {'error': 'config.json not found in the plugin directory'}, 400
     except subprocess.CalledProcessError as e:
         return {'error': f'Failed to install plugin: {str(e)}'}, 500
