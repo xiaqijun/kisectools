@@ -5,6 +5,8 @@ from .models import Plugins
 import os
 import subprocess
 import json
+import importlib.util
+import sys
 
 plugin_bp = Blueprint('plugin', __name__)
 
@@ -64,3 +66,36 @@ def install_plugin():
             return {'error': 'config.json not found in the plugin directory'}, 400
     except subprocess.CalledProcessError as e:
         return {'error': f'Failed to install plugin: {str(e)}'}, 500
+    
+
+# 启用插件
+@plugin_bp.route("/enable_plugin", methods=["POST"])
+@login_required
+def enable_plugin():
+    plugin_id = request.json.get("plugin_id")
+    plugin = Plugins.query.get(plugin_id)
+    if plugin:
+        try:
+            # 动态加载插件模块
+            plugin_path = os.path.join(plugin.file_url, f"{plugin.name}.py")
+            module_name = f"{plugin.name}"
+            spec = importlib.util.spec_from_file_location(module_name, plugin_path) 
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+            # 插件加载成功，更新状态
+            class_name = plugin.class_name
+            if not class_name:
+                return {"error": "Class name not found in plugin config"}, 400
+            plugin_class = getattr(module, class_name, None)
+            if not plugin_class:
+                return {"error": f"Class {class_name} not found in plugin"}, 400
+            plugin.status = 1
+            db.session.commit()
+            return {"message": "Plugin enabled and loaded successfully"}, 200
+        except Exception as e:
+            return {"error": f"Failed to load plugin: {str(e)}"}, 500
+    else:
+        return {"error": "Plugin not found"}, 404
+    
+    

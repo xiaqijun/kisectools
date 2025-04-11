@@ -47,8 +47,12 @@
                 <td>{{ plugin.status }}</td>
                 <td>{{ plugin.description }}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary">启用</button>
-                    <button class="btn btn-sm btn-danger">删除</button>
+                    {% if plugin.status == 'true' %}
+                    <button id="disable_{{plugin.id}}" class="btn btn-sm btn-secondary">禁用</button>
+                    {% else %}
+                    <button id="enable_{{plugin.id}}"class="btn btn-sm btn-primary">启用</button>
+                    {% endif %}
+                    <button id="delete_{{plugin.id}}" class="btn btn-sm btn-danger">删除</button>
                 </td>
             </tr>
             {% endfor %}
@@ -101,6 +105,28 @@
                 alert(error.response?.data?.message || '安装插件失败，请稍后重试。');
             }
         });
+
+        const enableButtons = document.querySelectorAll("button[id^='enable_']");
+        enableButtons.forEach(button => {
+            button.addEventListener("click", async function() {
+                const pluginId = this.id.split('_')[1];
+                try {
+                    const response = await axios.post('/plugin/enable_plugin', { plugin_id: pluginId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials: true
+                    });
+                    if (response.status === 200) {
+                        alert(response.data.message || '插件已启用！');
+                        location.reload();
+                    }
+                } catch (error) {
+                    alert(error.response?.data?.error || '启用插件失败，请稍后重试。');
+                }
+            });
+        });
     });
+    
 </script>
 {% endblock %}

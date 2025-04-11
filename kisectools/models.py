@@ -58,4 +58,4 @@ class Plugins(db.Model):
     class_name = db.Column(db.String(150), nullable=False)
     description = db.Column(db.String(255))
     file_url = db.Column(db.String(255), nullable=False)
-    plugin_url = db.Column(db.String(255), nullable=False)
+    plugin_url = db.Column(db.String(255), nullable=True)
