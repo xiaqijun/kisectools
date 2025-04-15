@@ -57,7 +57,7 @@ class Plugins(db.Model):
     status = db.Column(db.Boolean, default=False)
     class_name = db.Column(db.String(150), nullable=False)
     description = db.Column(db.String(255))
-    file_url = db.Column(db.String(255), nullable=False)
+    file_url = db.Column(db.String(255), nullable=False) #文件路径
     plugin_url = db.Column(db.String(255), nullable=True)
     devices = db.relationship('Devices', backref='plugin', lazy=True)
 

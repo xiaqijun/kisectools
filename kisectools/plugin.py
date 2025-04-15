@@ -123,6 +123,9 @@ def delete_plugin():
     plugin=Plugins.query.get(plugin_id)
     if plugin:
         try:
+            module_name = plugin.name
+            if module_name in sys.modules:
+                del sys.modules[module_name]
             # 删除插件文件夹
             plugin_path = plugin.file_url
             if os.path.exists(plugin_path):
