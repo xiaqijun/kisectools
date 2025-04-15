@@ -61,11 +61,11 @@ def install_plugin():
             )
             db.session.add(plugin)
             db.session.commit()
-            return {'message': 'Plugin installed successfully'}, 200
+            return {'message': '插件安装成功'}, 200
         else:
-            return {'error': 'config.json not found in the plugin directory'}, 400
+            return {'error': '未获取到配置文件'}, 400
     except subprocess.CalledProcessError as e:
-        return {'error': f'Failed to install plugin: {str(e)}'}, 500
+        return {'error': f'插件安装失败： {str(e)}'}, 500
     
 
 # 启用插件
@@ -85,17 +85,56 @@ def enable_plugin():
             spec.loader.exec_module(module)
             # 插件加载成功，更新状态
             class_name = plugin.class_name
-            if not class_name:
-                return {"error": "Class name not found in plugin config"}, 400
-            plugin_class = getattr(module, class_name, None)
+            plugin_class = getattr(sys.modules['zoomeye'], class_name, None)
             if not plugin_class:
-                return {"error": f"Class {class_name} not found in plugin"}, 400
+                return {"error": f"插件{class_name}不存在"}, 400
             plugin.status = 1
             db.session.commit()
-            return {"message": "Plugin enabled and loaded successfully"}, 200
+            return {"message": "插件启用成功"}, 200
         except Exception as e:
-            return {"error": f"Failed to load plugin: {str(e)}"}, 500
+            return {"error": f"无法加载插件: {str(e)}"}, 500
     else:
-        return {"error": "Plugin not found"}, 404
+        return {"error": "插件不存在"}, 404
+
+@plugin_bp.route("/disable_plugin", methods=["POST"])
+@login_required
+def disable_plugin():
+    plugin_id = request.json.get("plugin_id")
+    plugin = Plugins.query.get(plugin_id)
+    if plugin:
+        try:
+            # 从内存中卸载插件
+            module_name = plugin.name
+            if module_name in sys.modules:
+                del sys.modules[module_name]
+            # 更新插件状态为禁用
+            plugin.status = 0
+            db.session.commit()
+            return {"message": "插件已禁用"}, 200
+        except Exception as e:
+            return {"error": f"无法禁用插件: {str(e)}"}, 500
+    else:
+        return {"error": "插件不存在"}, 404
     
-    
+@plugin_bp.route("/delete_plugin",methods=["POST"])
+@login_required
+def delete_plugin():
+    plugin_id=request.json.get("plugin_id")
+    plugin=Plugins.query.get(plugin_id)
+    if plugin:
+        try:
+            # 删除插件文件夹
+            plugin_path = plugin.file_url
+            if os.path.exists(plugin_path):
+                import shutil
+                shutil.rmtree(plugin_path) 
+            # 从数据库中删除插件记录
+            db.session.delete(plugin)
+            db.session.commit()
+            return {"message": "插件已删除"}, 200
+        except Exception as e:
+            return {"error": f"无法删除插件: {str(e)}"}, 500
+    else:
+        return {"error": "插件不存在"}, 404
+
+

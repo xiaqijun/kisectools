@@ -10,7 +10,8 @@
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#installPluginModal">安装插件</button>
     </div>
     <!-- 模态框 -->
-    <div class="modal fade" id="installPluginModal" tabindex="-1" aria-labelledby="installPluginModalLabel" aria-hidden="true">
+    <div class="modal fade" id="installPluginModal" tabindex="-1" aria-labelledby="installPluginModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -22,7 +23,8 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="githubUrl" class="form-label">Git地址</label>
-                            <input class="form-control" type="url" id="githubUrl" name="github_url" placeholder="输入插件的 Git 地址" required>
+                            <input class="form-control" type="url" id="githubUrl" name="github_url"
+                                placeholder="输入插件的 Git 地址" required>
                         </div>
                         <button id="download_plugin" type="submit" class="btn btn-primary">下载并安装</button>
                     </form>
@@ -47,10 +49,10 @@
                 <td>{{ plugin.status }}</td>
                 <td>{{ plugin.description }}</td>
                 <td>
-                    {% if plugin.status == 'true' %}
+                    {% if plugin.status == '启用' %}
                     <button id="disable_{{plugin.id}}" class="btn btn-sm btn-secondary">禁用</button>
                     {% else %}
-                    <button id="enable_{{plugin.id}}"class="btn btn-sm btn-primary">启用</button>
+                    <button id="enable_{{plugin.id}}" class="btn btn-sm btn-primary">启用</button>
                     {% endif %}
                     <button id="delete_{{plugin.id}}" class="btn btn-sm btn-danger">删除</button>
                 </td>
@@ -65,18 +67,17 @@
                 <a class="page-link" href="?page={{ plugins.page - 1 }}&per_page={{ plugins.per_page }}">上一页</a>
             </li>
             {% endif %}
-            {% if plugins.page < (plugins.total // plugins.per_page) + 1 %}
-            <li class="page-item">
+            {% if plugins.page < (plugins.total // plugins.per_page) + 1 %} <li class="page-item">
                 <a class="page-link" href="?page={{ plugins.page + 1 }}&per_page={{ plugins.per_page }}">下一页</a>
-            </li>
-            {% endif %}
+                </li>
+                {% endif %}
         </ul>
     </nav>
 </div>
 <script>
-    document.addEventListener("DOMContentLoaded", function() { 
+    document.addEventListener("DOMContentLoaded", function () {
         const downloadButton = document.getElementById("download_plugin");
-        downloadButton.addEventListener("click", async function(event) {
+        downloadButton.addEventListener("click", async function (event) {
             event.preventDefault(); // 阻止默认提交
 
             const githubUrl = document.getElementById("githubUrl").value;
@@ -88,7 +89,7 @@
             }
 
             try {
-                
+
                 const response = await axios.post('/plugin/install', { url: githubUrl }, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -108,7 +109,7 @@
 
         const enableButtons = document.querySelectorAll("button[id^='enable_']");
         enableButtons.forEach(button => {
-            button.addEventListener("click", async function() {
+            button.addEventListener("click", async function () {
                 const pluginId = this.id.split('_')[1];
                 try {
                     const response = await axios.post('/plugin/enable_plugin', { plugin_id: pluginId }, {
@@ -126,7 +127,30 @@
                 }
             });
         });
+
+        const disableButtons = document.querySelectorAll("button[id^='disable_']");
+        disableButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const pluginId = this.id.split('_')[1];
+                try {
+                    const response = await axios.post('/plugin/disable_plugin', { plugin_id: pluginId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials:true
+                    }); 
+                    if(response.status===200){
+                        alert(response.data.message||'插件已禁用!')
+                        location.reload();
+                    }
+                } catch(error){
+                    alert(error.response?.data?.error||'插件禁用失败')
+                }
+                
+            })
+        }
+        )
     });
-    
+
 </script>
 {% endblock %}

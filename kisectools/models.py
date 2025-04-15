@@ -59,3 +59,12 @@ class Plugins(db.Model):
     description = db.Column(db.String(255))
     file_url = db.Column(db.String(255), nullable=False)
     plugin_url = db.Column(db.String(255), nullable=True)
+    devices = db.relationship('Devices', backref='plugin', lazy=True)
+
+class Devices(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), unique=True, nullable=False)
+    status = db.Column(db.Boolean, default=False)
+    ip = db.Column(db.String(150), nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    plugin_id = db.Column(db.Integer, db.ForeignKey('plugins.id'), nullable=False)
