@@ -85,7 +85,7 @@ def enable_plugin():
             spec.loader.exec_module(module)
             # 插件加载成功，更新状态
             class_name = plugin.class_name
-            plugin_class = getattr(sys.modules['zoomeye'], class_name, None)
+            plugin_class = getattr(sys.modules[module_name], class_name, None)
             if not plugin_class:
                 return {"error": f"插件{class_name}不存在"}, 400
             plugin.status = 1
