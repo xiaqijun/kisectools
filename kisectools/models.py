@@ -38,8 +38,6 @@ class Task(db.Model):
     task_time = db.Column(db.DateTime, server_default=db.func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     task_id= db.Column(db.String(150), unique=True, nullable=False)
-    def __repr__(self):
-        return f'<Task {self.task_name}>'
 class Task_result(db.Model):
     __tablename__ = 'task_result'
     id = db.Column(db.Integer, primary_key=True)
@@ -59,6 +57,7 @@ class Plugins(db.Model):
     description = db.Column(db.String(255))
     file_url = db.Column(db.String(255), nullable=False) #文件路径
     plugin_url = db.Column(db.String(255), nullable=True)
+    auth= db.Column(db.String(10), nullable=True) #认证方式
     devices = db.relationship('Devices', backref='plugin', lazy=True)
 
 class Devices(db.Model):
@@ -67,4 +66,7 @@ class Devices(db.Model):
     status = db.Column(db.Boolean, default=False)
     ip = db.Column(db.String(150), nullable=False)
     port = db.Column(db.String(150), nullable=False)
+    username = db.Column(db.String(150), nullable=True)
+    password = db.Column(db.String(150), nullable=True)
+    token = db.Column(db.String(150), nullable=True)
     plugin_id = db.Column(db.Integer, db.ForeignKey('plugins.id'), nullable=False)

@@ -7,8 +7,14 @@ import subprocess
 import json
 import importlib.util
 import sys
+import stat
 
 plugin_bp = Blueprint('plugin', __name__)
+
+def handle_remove_readonly(func, path, exc_info):
+    """清除只读属性并重新尝试删除"""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 @plugin_bp.route('/', methods=['GET'])
 @login_required
@@ -50,6 +56,7 @@ def install_plugin():
             name = config_data.get('name')
             description = config_data.get('description')
             class_name = config_data.get('class_name')
+            auth=config_data.get('auth')
             plugin_url = url
             plugin = Plugins(
                 name=name,
@@ -57,7 +64,8 @@ def install_plugin():
                 class_name=class_name,
                 status=0,
                 file_url=plugin_path,
-                plugin_url=plugin_url
+                plugin_url=plugin_url,
+                auth=auth
             )
             db.session.add(plugin)
             db.session.commit()
@@ -85,7 +93,7 @@ def enable_plugin():
             spec.loader.exec_module(module)
             # 插件加载成功，更新状态
             class_name = plugin.class_name
-            plugin_class = getattr(sys.modules[module_name], class_name, None)
+            plugin_class = getattr(sys.modules[module_name], class_name, None) 
             if not plugin_class:
                 return {"error": f"插件{class_name}不存在"}, 400
             plugin.status = 1
@@ -128,9 +136,10 @@ def delete_plugin():
                 del sys.modules[module_name]
             # 删除插件文件夹
             plugin_path = plugin.file_url
+            print(plugin_path)
             if os.path.exists(plugin_path):
                 import shutil
-                shutil.rmtree(plugin_path) 
+                shutil.rmtree(plugin_path, onexc=handle_remove_readonly) # 删除文件夹及其内容
             # 从数据库中删除插件记录
             db.session.delete(plugin)
             db.session.commit()
@@ -140,4 +149,18 @@ def delete_plugin():
     else:
         return {"error": "插件不存在"}, 404
 
-
+@plugin_bp.route("/query_all_plugin",methods=["GET"])
+@login_required
+def query_all_plugin():
+    plugins=Plugins.query.all()
+    responses={
+        'data':[
+            {
+                'name':plugin.name,
+                'status':plugin.status,
+                'description':plugin.description,
+                'id':plugin.id,
+            } for plugin in plugins
+        ]
+    }
+    return responses,200

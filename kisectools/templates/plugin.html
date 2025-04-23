@@ -148,8 +148,30 @@
                 }
                 
             })
-        }
-        )
+        });
+        
+        const deleteButtons = document.querySelectorAll("button[id^='delete_']");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const pluginId = this.id.split('_')[1];
+                if (confirm("确定要删除此插件吗？")) {
+                    try {
+                        const response = await axios.post('/plugin/delete_plugin', { plugin_id: pluginId }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            withCredentials: true
+                        });
+                        if (response.status === 200) {
+                            alert(response.data.message || '插件已删除！');
+                            location.reload();
+                        }
+                    } catch (error) {
+                        alert(error.response?.data?.error || '删除插件失败，请稍后重试。');
+                    }
+                }
+            });
+        });
     });
 
 </script>

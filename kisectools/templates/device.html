@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}设备管理{% endblock %}
+
+{% block header %}设备管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">添加设备</button>
+    </div>
+    <!-- 添加设备模态框 -->
+    <div class="modal fade" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDeviceModalLabel">添加设备</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="deviceName" class="form-label">设备名称</label>
+                            <input class="form-control" type="text" id="deviceName" name="device_name" placeholder="输入设备名称" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deviceIP" class="form-label">设备 IP</label>
+                            <input class="form-control" type="text" id="deviceIP" name="device_ip" placeholder="输入设备 IP 地址" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deviceport" class="form-label">设备端口</label>
+                            <input class="form-control" type="text" id="deviceport" name="device_port" placeholder="输入设备端口" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plugin" class="form-label">插件</label>
+                            <select class="form-select" id="plugin" name="plugin" required>
+                                <option value="" disabled selected>选择插件</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input class="form-control" type="text" id="username" name="username" placeholder="输入用户名" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            <input class="form-control" type="password" id="password" name="password" placeholder="输入密码" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="token" class="form-label">Token</label>
+                            <input class="form-control" type="text" id="token" name="token" placeholder="输入 Token" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">添加设备</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模态框结束 -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>设备名称</th>
+                <th>IP 地址</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices.data %}
+            <tr>
+                <td>{{ device.name }}</td>
+                <td>{{ device.ip }}</td>
+                <td>{{ device.status }}</td>
+                <td>
+                    <button id="edit_{{ device.id }}" class="btn btn-sm btn-secondary">编辑</button>
+                    <button id="delete_{{ device.id }}" class="btn btn-sm btn-danger">删除</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        // 加载插件到选择表单
+        const pluginSelect = document.getElementById("plugin");
+        try {
+            const response = await axios.get('/plugin/query_all_plugin', {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true
+            });
+            if (response.status === 200 && response.data.data) {
+                response.data.data.forEach(plugin => {
+                    const option = document.createElement("option");
+                    option.value = plugin.id;
+                    option.textContent = plugin.name;
+                    pluginSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载插件失败:', error.response?.data?.error || error.message);
+        }
+
+        // 删除设备逻辑
+        const deleteButtons = document.querySelectorAll("button[id^='delete_']");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const deviceId = this.id.split('_')[1];
+                if (confirm("确定要删除此设备吗？")) {
+                    try {
+                        const response = await axios.post('/device/delete', { device_id: deviceId }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            withCredentials: true
+                        });
+                        if (response.status === 200) {
+                            alert(response.data.message || '设备已删除！');
+                            location.reload();
+                        }
+                    } catch (error) {
+                        alert(error.response?.data?.error || '删除设备失败，请稍后重试。');
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
