@@ -70,3 +70,4 @@ class Devices(db.Model):
     password = db.Column(db.String(150), nullable=True)
     token = db.Column(db.String(150), nullable=True)
     plugin_id = db.Column(db.Integer, db.ForeignKey('plugins.id'), nullable=False)
+

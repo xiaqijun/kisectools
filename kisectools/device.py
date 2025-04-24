@@ -10,7 +10,7 @@ def device():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     devices = Devices.query.paginate(page=page, per_page=per_page)
-    status_mapping = {0: "在线", 1: "离线"}
+    status_mapping = {1: "在线", 0: "离线"}
     responses = {
         'page': devices.page,
         'per_page': devices.per_page,
