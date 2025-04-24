@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask_security import login_required
 from . import db
-from .models import Plugins
+from .models import Plugins,Devices
 import os
 import subprocess
 import json
@@ -82,7 +82,7 @@ def install_plugin():
 def enable_plugin():
     plugin_id = request.json.get("plugin_id")
     plugin = Plugins.query.get(plugin_id)
-    if plugin:
+    if plugin and not plugin.status:
         try:
             # 动态加载插件模块
             plugin_path = os.path.join(plugin.file_url, f"{plugin.name}.py")
@@ -108,8 +108,12 @@ def enable_plugin():
 @login_required
 def disable_plugin():
     plugin_id = request.json.get("plugin_id")
-    plugin = Plugins.query.get(plugin_id)
+    device=Devices.query.filter_by(plugin_id=plugin_id).first()
+    if device:
+        return {"error":"请先删除绑定设备"},500
+    plugin = Plugins.query.get(plugin_id) 
     if plugin:
+        # 检查插件是否绑定了设备
         try:
             # 从内存中卸载插件
             module_name = plugin.name
@@ -128,6 +132,9 @@ def disable_plugin():
 @login_required
 def delete_plugin():
     plugin_id=request.json.get("plugin_id")
+    device=Devices.query.filter_by(plugin_id=plugin_id).first()
+    if device:
+        return {"error":"请先删除绑定设备"},500
     plugin=Plugins.query.get(plugin_id)
     if plugin:
         try:
@@ -165,3 +172,20 @@ def query_all_plugin():
         ]
     }
     return responses,200
+
+@plugin_bp.route("/query_plugin",methods=["POST"])
+@login_required
+def query_plugin():
+    plugin_id=request.json.get("plugin_id")
+    plugin=Plugins.query.get(plugin_id)
+    if plugin:
+        responses={
+            'name':plugin.name,
+            'status':plugin.status,
+            'description':plugin.description,
+            'id':plugin.id,
+            'auth':plugin.auth,
+        }
+        return responses,200
+    else:
+        return {"error": "插件不存在"}, 404

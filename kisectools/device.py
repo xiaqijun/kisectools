@@ -20,7 +20,9 @@ def device():
                 'name': device.name,
                 'status': status_mapping.get(device.status, "未知"),
                 'ip': device.ip,
-                'id': device.id
+                'port':device.port,
+                'id': device.id,
+                'auth':device.plugin.auth
             } for device in devices.items
         ]
     }
@@ -55,3 +57,57 @@ def add_device():
     db.session.add(new_device)
     db.session.commit()
     return {"message": "设备添加成功"}, 200
+
+@device_bp.route('/delete', methods=['POST'])
+@login_required
+def delete_device():
+    device_id = request.json.get('device_id')
+    device = Devices.query.get(device_id)
+    if not device:
+        return {"error": "设备不存在"}, 400
+    db.session.delete(device)
+    db.session.commit()
+    return {"message": "设备删除成功"}, 200
+
+@device_bp.route('/update', methods=['POST'])
+@login_required
+def update_device():
+    device_id = request.json.get('device_id')
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    token = request.json.get('token', None)
+    ip = request.json.get('ip', None)
+    port = request.json.get('port', None)
+    device = Devices.query.get(device_id)
+    if not device:
+        return {"error": "设备不存在"}, 400
+    if username is not None:
+        device.username = username
+    if password is not None:
+        device.password = password
+    if token is not None:
+        device.token = token
+    if ip is not None:
+        device.ip = ip
+    if port is not None:
+        device.port = port
+    db.session.commit()
+    return {"message": "设备更新成功"}, 200
+
+@device_bp.route('/query_device', methods=['POST'])
+@login_required
+def query_device():
+    device_id = request.json.get('device_id')
+    device = Devices.query.get(device_id)
+    if not device:
+        return {"error": "设备不存在"}, 400
+    response = {
+        'name': device.name,
+        'ip': device.ip,
+        'port': device.port,
+        'plugin_id': device.plugin_id,
+        'username': device.username,
+        'password': device.password,
+        'token': device.token
+    }
+    return response, 200

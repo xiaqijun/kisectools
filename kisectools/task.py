@@ -8,7 +8,6 @@ task_bp = Blueprint('task', __name__)
 def task():
     page=request.args.get('page',1,type=int)
     per_page=request.args.get('per_page',10,type=int)
-    print(type(page),type(per_page))
     tasks=Task.query.paginate(page=page,per_page=per_page)
     responses={
         'page':tasks.page,

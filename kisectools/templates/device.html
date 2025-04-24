@@ -71,7 +71,7 @@
             <tr>
                 <td>{{ device.name }}</td>
                 <td>{{ device.ip }}</td>
-                <td>{{ device.status }}</td>
+                <td>{{ device.status }} {% if device.status == '在线' %}<span class="text-success">●</span>{% elif device.status == '离线' %}<span class="text-danger">●</span>{% endif %}</td>
                 <td>
                     <button id="edit_{{ device.id }}" class="btn btn-sm btn-secondary">编辑</button>
                     <button id="delete_{{ device.id }}" class="btn btn-sm btn-danger">删除</button>
@@ -80,6 +80,48 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
+<!-- 编辑设备模态框 -->
+<div class="modal fade" id="editDeviceModal" tabindex="-1" aria-labelledby="editDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editDeviceModalLabel">编辑设备</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDeviceForm" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="editDeviceId" name="device_id">
+                    <div class="mb-3">
+                        <label for="editDeviceName" class="form-label">设备名称</label>
+                        <input class="form-control" type="text" id="editDeviceName" name="name" placeholder="输入设备名称" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDeviceIP" class="form-label">设备 IP</label>
+                        <input class="form-control" type="text" id="editDeviceIP" name="ip" placeholder="输入设备 IP 地址" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDevicePort" class="form-label">设备端口</label>
+                        <input class="form-control" type="text" id="editDevicePort" name="port" placeholder="输入设备端口" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">用户名</label>
+                        <input class="form-control" type="text" id="editUsername" name="username" placeholder="输入用户名">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label">密码</label>
+                        <input class="form-control" type="password" id="editPassword" name="password" placeholder="输入密码">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editToken" class="form-label">Token</label>
+                        <input class="form-control" type="text" id="editToken" name="token" placeholder="输入 Token">
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存更改</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
@@ -190,6 +232,82 @@
                     }
                 }
             });
+        });
+
+        // 编辑设备逻辑
+        const editDeviceForm = document.getElementById("editDeviceForm");
+        const editDeviceModal = new bootstrap.Modal(document.getElementById("editDeviceModal"));
+
+        document.querySelectorAll("button[id^='edit_']").forEach(button => {
+            button.addEventListener("click", function () {
+                const deviceId = this.id.split('_')[1];
+                const devices = {{ devices|tojson }};
+                const device = devices.data.find(d => d.id == deviceId);
+
+                if (device) {
+                    document.getElementById("editDeviceId").value = device.id;
+                    document.getElementById("editDeviceName").value = device.name;
+                    document.getElementById("editDeviceIP").value = device.ip;
+                    document.getElementById("editDevicePort").value = device.port;
+                    document.getElementById("editUsername").value = device.username || "";
+                    document.getElementById("editPassword").value = ""; // 密码不预填
+                    document.getElementById("editToken").value = device.token || "";
+
+                    // 根据 auth 字段动态显示输入框
+                    const auth = device.auth;
+                    const usernameField = document.getElementById("editUsername").closest(".mb-3");
+                    const passwordField = document.getElementById("editPassword").closest(".mb-3");
+                    const tokenField = document.getElementById("editToken").closest(".mb-3");
+
+                    if (auth === "1") {
+                        usernameField.style.display = "block";
+                        passwordField.style.display = "block";
+                        tokenField.style.display = "none";
+                        document.getElementById("editUsername").required = true;
+                        document.getElementById("editPassword").required = true;
+                        document.getElementById("editToken").required = false;
+                    } else if (auth === "2") {
+                        usernameField.style.display = "none";
+                        passwordField.style.display = "none";
+                        tokenField.style.display = "block";
+                        document.getElementById("editUsername").required = false;
+                        document.getElementById("editPassword").required = false;
+                        document.getElementById("editToken").required = true;
+                    } else {
+                        usernameField.style.display = "none";
+                        passwordField.style.display = "none";
+                        tokenField.style.display = "none";
+                        document.getElementById("editUsername").required = false;
+                        document.getElementById("editPassword").required = false;
+                        document.getElementById("editToken").required = false;
+                    }
+
+                    editDeviceModal.show();
+                }
+            });
+        });
+
+        editDeviceForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await axios.post('/device/update', data, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true
+                });
+
+                if (response.status === 200) {
+                    alert(response.data.message || '设备更新成功！');
+                    location.reload();
+                }
+            } catch (error) {
+                alert(error.response?.data?.error || '更新设备失败，请稍后重试。');
+            }
         });
     });
 </script>
