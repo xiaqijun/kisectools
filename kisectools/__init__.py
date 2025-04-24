@@ -24,7 +24,6 @@ def create_app(config_class='config.Config'):
     scheduler.init_app(app)
     if not scheduler.running:
         scheduler.start()
-
     # 配置 Flask-Security
     from .models import User, Role  # 假设 User 和 Role 模型已定义
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -79,4 +78,5 @@ def detect_device_status():
                 print({"error": f"插件实例化失败: {str(e)}"}, 400)
             device.status = status
             db.session.commit()
+        print("设备状态检测完成")
 

@@ -10,8 +10,25 @@
             height: 100vh;
         }
         .sidebar {
-            width: 200px;
+            width: 180px;
             flex-shrink: 0;
+            background: linear-gradient(180deg, #343a40, #212529);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .sidebar a {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+            color: #f8f9fa;
         }
         .header {
             height: 50px;
@@ -24,7 +41,7 @@
 </head>
 <body class="d-flex">
     <div class="sidebar bg-dark text-white p-3">
-        <h2>Menu</h2>
+        <h2>端口扫描器</h2>
         <a href="/task" class="text-white text-decoration-none d-block mb-2">任务管理</a>
         <a href="/plugin" class="text-white text-decoration-none d-block mb-2">插件管理</a>
         <a href="/device" class="text-white text-decoration-none d-block mb-2">设备管理</a>
