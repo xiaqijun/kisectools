@@ -20,7 +20,7 @@ def device():
                 'name': device.name,
                 'status': status_mapping.get(device.status, "未知"),
                 'ip': device.ip,
-                'id': device.id,
+                'id': device.id
             } for device in devices.items
         ]
     }
@@ -36,9 +36,9 @@ def add_device():
     username = request.json.get('username', '')
     password = request.json.get('password', '')
     token = request.json.get('token', '')
-
     # 插件实例化逻辑
     plugin = Plugins.query.get(plugin_id)
+    print(f"plugin_id:{plugin_id},name:{name},ip:{ip},port:{port},username:{username},password:{password},token:{token}")
     if not plugin:
         return {"error": "插件不存在"}, 400
     # 创建设备实例
@@ -47,8 +47,8 @@ def add_device():
     if class_name is None:
         return {"error": "插件类不存在"}, 400
     try:
-        instance = class_name(ip, port, username, password, token)
-        status=instance.get_status()
+        instance = class_name(ip=ip, port=port, username=username, password=password, token=token)
+        status = instance.get_status()
     except Exception as e:
         return {"error": f"插件实例化失败: {str(e)}"}, 400
     new_device = Devices(name=name, ip=ip, port=port, plugin_id=plugin_id, username=username, password=password, token=token,status=status)

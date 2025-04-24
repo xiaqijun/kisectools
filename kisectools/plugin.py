@@ -160,6 +160,7 @@ def query_all_plugin():
                 'status':plugin.status,
                 'description':plugin.description,
                 'id':plugin.id,
+                'auth':plugin.auth,
             } for plugin in plugins
         ]
     }

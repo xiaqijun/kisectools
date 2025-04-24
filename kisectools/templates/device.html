@@ -22,19 +22,19 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="deviceName" class="form-label">设备名称</label>
-                            <input class="form-control" type="text" id="deviceName" name="device_name" placeholder="输入设备名称" required>
+                            <input class="form-control" type="text" id="deviceName" name="name" placeholder="输入设备名称" required>
                         </div>
                         <div class="mb-3">
                             <label for="deviceIP" class="form-label">设备 IP</label>
-                            <input class="form-control" type="text" id="deviceIP" name="device_ip" placeholder="输入设备 IP 地址" required>
+                            <input class="form-control" type="text" id="deviceIP" name="ip" placeholder="输入设备 IP 地址" required>
                         </div>
                         <div class="mb-3">
                             <label for="deviceport" class="form-label">设备端口</label>
-                            <input class="form-control" type="text" id="deviceport" name="device_port" placeholder="输入设备端口" required>
+                            <input class="form-control" type="text" id="deviceport" name="port" placeholder="输入设备端口" required>
                         </div>
                         <div class="mb-3">
                             <label for="plugin" class="form-label">插件</label>
-                            <select class="form-select" id="plugin" name="plugin" required>
+                            <select class="form-select" id="plugin" name="plugin_id" required>
                                 <option value="" disabled selected>选择插件</option>
                             </select>
                         </div>
@@ -97,12 +97,76 @@
                     const option = document.createElement("option");
                     option.value = plugin.id;
                     option.textContent = plugin.name;
+                    option.setAttribute("data-auth", plugin.auth); // 将 auth 属性存储为 data-auth
                     pluginSelect.appendChild(option);
                 });
             }
         } catch (error) {
             console.error('加载插件失败:', error.response?.data?.error || error.message);
         }
+
+        // 根据插件的 auth 属性动态显示输入框
+        pluginSelect.addEventListener("change", function () {
+            const selectedOption = pluginSelect.options[pluginSelect.selectedIndex];
+            const auth = selectedOption.getAttribute("data-auth");
+
+            const usernameField = document.getElementById("username").closest(".mb-3");
+            const passwordField = document.getElementById("password").closest(".mb-3");
+            const tokenField = document.getElementById("token").closest(".mb-3");
+
+            if (auth === "1") {
+                usernameField.style.display = "block";
+                passwordField.style.display = "block";
+                tokenField.style.display = "none";
+                document.getElementById("username").required = true;
+                document.getElementById("password").required = true;
+                document.getElementById("token").required = false;
+            } else if (auth === "2") {
+                usernameField.style.display = "none";
+                passwordField.style.display = "none";
+                tokenField.style.display = "block";
+                document.getElementById("username").required = false;
+                document.getElementById("password").required = false;
+                document.getElementById("token").required = true;
+            } else {
+                usernameField.style.display = "none";
+                passwordField.style.display = "none";
+                tokenField.style.display = "none";
+                document.getElementById("username").required = false;
+                document.getElementById("password").required = false;
+                document.getElementById("token").required = false;
+            }
+        });
+
+        // 初始化时隐藏所有输入框
+        document.getElementById("username").closest(".mb-3").style.display = "none";
+        document.getElementById("password").closest(".mb-3").style.display = "none";
+        document.getElementById("token").closest(".mb-3").style.display = "none";
+
+        // 表单提交逻辑（模态框中的添加设备按钮）
+        const addDeviceForm = document.querySelector("#addDeviceModal form");
+        addDeviceForm.addEventListener("submit", async function (event) {
+            event.preventDefault(); // 阻止默认表单提交行为
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await axios.post('/device/add', data, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true
+                });
+
+                if (response.status === 200) {
+                    alert(response.data.message || '设备添加成功！');
+                    location.reload(); // 刷新页面
+                }
+            } catch (error) {
+                alert(error.response?.data?.error || '添加设备失败，请稍后重试。');
+            }
+        });
 
         // 删除设备逻辑
         const deleteButtons = document.querySelectorAll("button[id^='delete_']");

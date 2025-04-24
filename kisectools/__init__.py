@@ -4,6 +4,10 @@ from flask_apscheduler import APScheduler
 from flask_security import Security, SQLAlchemyUserDatastore,hash_password
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+import os
+import importlib.util
+import sys
+
 # 初始化扩展
 db = SQLAlchemy()
 scheduler = APScheduler()
@@ -43,4 +47,18 @@ def create_app(config_class='config.Config'):
         if not User.query.filter_by(email='admin@example.com').first():
             user_datastore.create_user(email='admin@example.com',username="admin", password=hash_password('admin'), roles=['admin'])
         db.session.commit()
+
+        # 在应用启动时重新加载已启用的插件
+        from .models import Plugins
+        enabled_plugins = Plugins.query.filter_by(status=1).all()
+        for plugin in enabled_plugins:
+            try:
+                plugin_path = os.path.join(plugin.file_url, f"{plugin.name}.py")
+                module_name = f"{plugin.name}"
+                spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[module_name] = module
+                spec.loader.exec_module(module)
+            except Exception as e:
+                print(f"Failed to load plugin {plugin.name}: {e}")
     return app
