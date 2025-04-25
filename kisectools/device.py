@@ -40,7 +40,6 @@ def add_device():
     token = request.json.get('token', '')
     # 插件实例化逻辑
     plugin = Plugins.query.get(plugin_id)
-    print(f"plugin_id:{plugin_id},name:{name},ip:{ip},port:{port},username:{username},password:{password},token:{token}")
     if not plugin:
         return {"error": "插件不存在"}, 400
     # 创建设备实例
@@ -91,6 +90,8 @@ def update_device():
         device.ip = ip
     if port is not None:
         device.port = port
+    instance = device.plugin_name()(ip=device.ip, port=device.port, username=device.username, password=device.password, token=device.token)
+    print(instance.get_status())
     db.session.commit()
     return {"message": "设备更新成功"}, 200
 

@@ -1,5 +1,7 @@
 from flask_security import UserMixin, RoleMixin
 from kisectools import db
+import sys
+from functools import lru_cache
 
 # 定义角色模型
 class Role(db.Model, RoleMixin):
@@ -70,4 +72,17 @@ class Devices(db.Model):
     password = db.Column(db.String(150), nullable=True)
     token = db.Column(db.String(150), nullable=True)
     plugin_id = db.Column(db.Integer, db.ForeignKey('plugins.id'), nullable=False)
-
+    
+    @lru_cache(maxsize=None)
+    def plugin_name(self):
+        module = sys.modules.get(self.plugin.name)
+        if not module:
+            return {"error": "插件模块不存在"}, 400
+        class_name = getattr(module, self.plugin.class_name, None)
+        if class_name is None:
+            return {"error": "插件类不存在"}, 400
+        try:
+            instance = class_name(ip=self.ip, port=self.port, username=self.username, password=self.password, token=self.token)
+        except Exception as e:
+            return {"error": f"插件实例化失败: {str(e)}"}, 400
+        return instance

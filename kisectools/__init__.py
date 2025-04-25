@@ -69,13 +69,7 @@ def detect_device_status():
         from .models import Devices
         devices = Devices.query.all()
         for device in devices:
-            module = sys.modules[device.plugin.name]
-            class_name = getattr(module, device.plugin.class_name, None)
-            try:
-                instance = class_name(ip=device.ip, port=device.port, username=device.username, password=device.password, token=device.token)
-                status = instance.get_status()
-            except Exception as e:
-                print({"error": f"插件实例化失败: {str(e)}"}, 400)
+            status=device.plugin_name().get_status()
             device.status = status
             db.session.commit()
         print("设备状态检测完成")

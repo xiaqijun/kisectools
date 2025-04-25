@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template,request
 from flask_security import login_required
 from . import db
-from .models import Task, Task_result
+from .models import Task, Task_result,Devices,Plugins
+import sys
 task_bp = Blueprint('task', __name__)
 @task_bp.route('/', methods=['GET'])
 @login_required
@@ -31,5 +32,13 @@ def add_task():
     task_name=request.json.get('task_name')
     ip_str=request.json.get('ip_str')
     port_str=request.json.get('port_str')
-    thread_num=request.json.get('thread_num')
-    return True
+    device_id=request.json.get('device_id')
+    plugin_id=Devices.query.get(device_id)
+    plugin = Plugins.query.get(plugin_id)
+    if not plugin:
+        return {"error": "插件不存在"}, 400
+    # 创建设备实例
+    module=sys.modules[plugin.name]
+    class_name=getattr(module,plugin.class_name,None)
+    
+    
