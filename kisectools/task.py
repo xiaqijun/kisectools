@@ -33,12 +33,16 @@ def add_task():
     ip_str=request.json.get('ip_str')
     port_str=request.json.get('port_str')
     device_id=request.json.get('device_id')
-    plugin_id=Devices.query.get(device_id)
-    plugin = Plugins.query.get(plugin_id)
-    if not plugin:
-        return {"error": "插件不存在"}, 400
-    # 创建设备实例
-    module=sys.modules[plugin.name]
-    class_name=getattr(module,plugin.class_name,None)
-    
+    device=Devices.query.get(device_id)
+    instance=device.plugin_name()
+    task_id=instance.create_task(task_name,ip_str,port_str)
+    task=Task(
+        task_name=task_name,
+        ip_str=ip_str,
+        port_str=port_str,
+        task_status=False,
+        user_id=1,
+        task_id=task_id
+    )
+
     

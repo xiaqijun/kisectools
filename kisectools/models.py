@@ -36,19 +36,25 @@ class Task(db.Model):
     __tablename__ = 'task'
     id = db.Column(db.Integer, primary_key=True)
     task_name = db.Column(db.String(150), unique=True, nullable=False)
+    ip_str = db.Column(db.Text, nullable=False)
+    port_str = db.Column(db.Text)
     task_status = db.Column(db.Boolean, default=False)
-    task_time = db.Column(db.DateTime, server_default=db.func.now())
+    create_time = db.Column(db.DateTime, server_default=db.func.now())
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    task_id= db.Column(db.String(150), unique=True, nullable=False)
+    task_id = db.Column(db.String(150), unique=True, nullable=False)
+    task_results=db.relationship('Task_result',backref='task_result',lazy=True)
+    
+
 class Task_result(db.Model):
     __tablename__ = 'task_result'
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
-    host= db.Column(db.String(150), nullable=False)
-    port= db.Column(db.String(150), nullable=False)
-    status= db.Column(db.String(150), nullable=False)
-    service= db.Column(db.String(150), nullable=False)
+    host = db.Column(db.String(150), nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    service = db.Column(db.String(150), nullable=False)
     create_time = db.Column(db.DateTime, server_default=db.func.now())
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
 
 class Plugins(db.Model):
     __tablename__ = 'plugins'
@@ -72,6 +78,8 @@ class Devices(db.Model):
     password = db.Column(db.String(150), nullable=True)
     token = db.Column(db.String(150), nullable=True)
     plugin_id = db.Column(db.Integer, db.ForeignKey('plugins.id'), nullable=False)
+    tasks = db.relationship('Task', backref='device', lazy=True)
+    
     
     @lru_cache(maxsize=None)
     def plugin_name(self):
