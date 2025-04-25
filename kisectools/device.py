@@ -64,6 +64,7 @@ def delete_device():
     device = Devices.query.get(device_id)
     if not device:
         return {"error": "设备不存在"}, 400
+    device.plugin_name.cache_clear()
     db.session.delete(device)
     db.session.commit()
     return {"message": "设备删除成功"}, 200
@@ -90,8 +91,8 @@ def update_device():
         device.ip = ip
     if port is not None:
         device.port = port
-    instance = device.plugin_name()(ip=device.ip, port=device.port, username=device.username, password=device.password, token=device.token)
-    print(instance.get_status())
+    # 清除缓存
+    device.plugin_name.cache_clear()
     db.session.commit()
     return {"message": "设备更新成功"}, 200
 
