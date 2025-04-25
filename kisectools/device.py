@@ -2,7 +2,7 @@ from flask import Flask,render_template,Blueprint,request
 from flask_security import login_required
 import sys
 from . import db,scheduler
-from .models import Devices,Plugins
+from .models import Devices,Plugins,Task
 device_bp = Blueprint('device', __name__)
 @device_bp.route('/', methods=['GET'])
 @login_required
@@ -61,6 +61,9 @@ def add_device():
 @login_required
 def delete_device():
     device_id = request.json.get('device_id')
+    task=Task.query.filter_by(device_id=device_id).first()
+    if task:
+        return {"error": "请先删除绑定的任务"}, 400
     device = Devices.query.get(device_id)
     if not device:
         return {"error": "设备不存在"}, 400
