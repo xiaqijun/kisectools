@@ -113,3 +113,19 @@ def query_device():
         'token': device.token
     }
     return response, 200
+@device_bp.route('/query_all_device', methods=['GET'])
+@login_required
+def query_all_devices():
+    devices = Devices.query.all()
+    status_mapping = {1: "在线", 0: "离线"}
+    responses = [
+        {
+            'name': device.name,
+            'status': status_mapping.get(device.status, "未知"),
+            'ip': device.ip,
+            'port': device.port,
+            'id': device.id,
+            'auth': device.plugin.auth
+        } for device in devices
+    ]
+    return {"devices": responses}, 200

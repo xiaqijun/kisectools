@@ -74,3 +74,12 @@ def detect_device_status():
             db.session.commit()
         print("设备状态检测完成")
 
+@scheduler.task('interval',id='check_task_status',seconds=60)
+def check_task_status():
+    with scheduler.app.app_context():
+        from .models import Task
+        tasks=Task.query.all()
+        for task in tasks:
+            status=task.device.plugin_name().get_task_status(task.task_id)
+            task.task_status=status
+            db.session.commit()

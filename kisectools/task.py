@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template,request
+from flask import Blueprint, render_template,request,current_app
 from flask_security import login_required
 from . import db
-from .models import Task, Task_result,Devices,Plugins
+from .models import Task, Task_result,Devices,Plugins,User
 import sys
+from flask_security import current_user
 task_bp = Blueprint('task', __name__)
 @task_bp.route('/', methods=['GET'])
 @login_required
@@ -15,13 +16,15 @@ def task():
         'per_page':tasks.per_page,
         'total':tasks.total,
         'data':[
+
             {
                 'task_name':task.task_name,
                 'task_status':task.task_status,
-                'task_time':task.task_time,
-                'user_id':task.user_id,
+                'create_time':task.create_time,
+                'user':User.query.get(task.user_id).username,
                 'task_id':task.task_id,
-                'id':task.id
+                'id':task.id,
+                'device':task.device.name
             } for task in tasks.items
         ]
     }
@@ -40,9 +43,13 @@ def add_task():
         task_name=task_name,
         ip_str=ip_str,
         port_str=port_str,
-        task_status=False,
-        user_id=1,
-        task_id=task_id
+        user_id=current_user.id,
+        task_id=task_id,
+        device_id=device_id  # 添加设备ID关联
     )
+    db.session.add(task)
+    db.session.commit()
+    return {"message": "任务创建成功", "task_id": task.id}, 200
 
-    
+
+
