@@ -5,7 +5,8 @@
 {% block header %}插件管理{% endblock %}
 
 {% block content %}
-<div class="container">
+
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#installPluginModal">安装插件</button>
     </div>
@@ -73,7 +74,7 @@
                 {% endif %}
         </ul>
     </nav>
-</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const downloadButton = document.getElementById("download_plugin");

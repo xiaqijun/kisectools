@@ -35,7 +35,24 @@
             flex-shrink: 0;
         }
         .content {
-            overflow-y: auto;
+            padding: 0; /* 移除所有内边距，确保内容区域填充整个区域 */
+        }
+
+        .table {
+            width: 100%; /* 确保表格宽度占满内容区域 */
+        }
+        /* 全局重置样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 确保 .container 紧贴左右边框 */
+        .container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
         }
     </style>
 </head>
