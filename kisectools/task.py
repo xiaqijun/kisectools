@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template,request,current_app
 from flask_security import login_required
-from . import db
+from . import db,scheduler
 from .models import Task, Task_result,Devices,Plugins,User
-import sys
 from flask_security import current_user
+import time
 task_bp = Blueprint('task', __name__)
 @task_bp.route('/', methods=['GET'])
 @login_required
@@ -29,6 +29,7 @@ def task():
         ]
     }
     return render_template('task.html', tasks=responses)
+
 @task_bp.route('/add',methods=['POST'])
 @login_required
 def add_task():
@@ -51,5 +52,27 @@ def add_task():
     db.session.commit()
     return {"message": "任务创建成功", "task_id": task.id}, 200
 
+@task_bp.route('/delete', methods=['POST'])
+@login_required
+def del_task():
+    task_id = request.json.get('task_id')
+    task = Task.query.filter_by(id=task_id).first()
+    if not task:
+        return {"message": "任务未找到"}, 404  # 如果任务不存在，返回404错误
 
+    db.session.delete(task)
+    db.session.commit()
+    return {"message": "任务删除成功"}, 200
+            
+
+@task_bp.route('/detail',methods=['POST'])
+@login_required
+def detail():
+    id=request.json.get('task_id')
+    task=Task.query.get(id)
+    task_result=task.device.plugin_name().get_task_result(task.task_id)
+    print(task_result)
+    return {
+        'task_result': task_result
+    }
 

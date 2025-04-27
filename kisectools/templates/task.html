@@ -107,6 +107,25 @@
         当前第 {{ tasks.page }} 页，每页 {{ tasks.per_page }} 条，共 {{ tasks.total }} 条数据。
     </p>
 
+    <div id="taskDetailModal" class="modal fade" tabindex="-1" aria-labelledby="taskDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="taskDetailModalLabel">任务详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>任务名称:</strong> <span id="detailTaskName"></span></p>
+                    <p><strong>任务状态:</strong> <span id="detailTaskStatus"></span></p>
+                    <p><strong>创建时间:</strong> <span id="detailCreateTime"></span></p>
+                    <p><strong>用户:</strong> <span id="detailUser"></span></p>
+                    <p><strong>设备:</strong> <span id="detailDevice"></span></p>
+                    <p><strong>任务结果:</strong> <span id="detailTaskResult"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
         // 加载设备列表
@@ -188,10 +207,31 @@
 
         // 查看任务详情逻辑
         document.querySelectorAll("button[id^='detail_']").forEach(button => {
-            button.addEventListener("click", function () {
+            button.addEventListener("click", async function () {
                 const taskId = this.id.split('_')[1];
-                // 跳转到任务详情页面
-                window.location.href = `/task/detail/${taskId}`;
+                try {
+                    const response = await axios.post('/task/detail', { task_id: taskId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials: true
+                    });
+
+                    if (response.status === 200) {
+                        const data = response.data;
+                        document.getElementById("detailTaskName").textContent = data.task_name;
+                        document.getElementById("detailTaskStatus").textContent = data.task_status;
+                        document.getElementById("detailCreateTime").textContent = data.create_time;
+                        document.getElementById("detailUser").textContent = data.user;
+                        document.getElementById("detailDevice").textContent = data.device;
+                        document.getElementById("detailTaskResult").textContent = data.task_result;
+
+                        const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
+                        taskDetailModal.show();
+                    }
+                } catch (error) {
+                    alert(error.response?.data?.error || '获取任务详情失败，请稍后重试。');
+                }
             });
         });
     });
