@@ -45,7 +45,7 @@ class Task(db.Model):
     task_id = db.Column(db.String(150), unique=True, nullable=False)
     task_results = db.relationship('Task_result', backref='task_result', lazy=True)
     sync_flag = db.Column(db.Boolean, default=False)  # 是否同步标志
-    task_type = db.Column(db.String(50), nullable=True)  # 任务类型，1表示为监控任务，0表示为普通任务
+    task_type = db.Column(db.String(50), nullable=True,default=0)  # 任务类型，1表示为监控任务，0表示为普通任务
     schedule_interval = db.Column(db.String(50), nullable=True)  # 任务调度间隔，例如 'daily', 'hourly'
     next_run_time = db.Column(db.DateTime, nullable=True)  # 下次运行时间
 

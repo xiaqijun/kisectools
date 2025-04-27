@@ -53,7 +53,6 @@
                 <th>任务创建时间</th>
                 <th>用户</th>
                 <th>设备</th>
-                <th>任务ID</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -66,9 +65,8 @@
                 <td>{{ task.create_time}}</td>
                 <td>{{ task.user }}</td>
                 <td>{{ task.device }}</td>
-                <td>{{ task.task_id }}</td>
                 <td>
-                    <button id="detail_{{ task.id }}" class="btn btn-sm btn-info">详情</button>
+                    <button id="detail_{{ task.id }}" class="btn btn-sm btn-info">结果</button>
                     <button id="delete_{{ task.id }}" class="btn btn-sm btn-danger">删除</button>
                 </td>
             </tr>
@@ -117,7 +115,7 @@
                 <div class="modal-body">
                     <style>
                         #taskDetailModal .modal-dialog {
-                            max-width: 90%; /* 设置模态框宽度为90% */
+                            max-width: 70%; /* 设置模态框宽度为90% */
                         }
                     </style>
                     <p><strong>统计：</strong>IP存活: <span id="detailUniqueIPs"></span>个，端口存活数: <span id="detailTotalPorts"></span>个</p>
@@ -256,7 +254,7 @@
                                     <td>${result.port}</td>
                                     <td>${result.status}</td>
                                     <td>${result.service}</td>
-                                    <td>${result.create_time}</td>
+                                    <td>${new Date(result.create_time).toLocaleString()}</td>
                                 `;
                                 resultTable.appendChild(row);
                             });
