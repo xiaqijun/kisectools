@@ -71,7 +71,7 @@ class Plugins(db.Model):
 class Devices(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), unique=True, nullable=False)
-    status = db.Column(db.Boolean, default=False)
+    status = db.Column(db.Boolean, default=False) 
     ip = db.Column(db.String(150), nullable=False)
     port = db.Column(db.String(150), nullable=False)
     username = db.Column(db.String(150), nullable=True)

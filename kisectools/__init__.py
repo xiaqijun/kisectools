@@ -78,7 +78,7 @@ def detect_device_status():
 def check_task_status():
     with scheduler.app.app_context():
         from .models import Task
-        tasks=Task.query.all()
+        tasks=Task.query.filter(Task.task_status=="processing").all()
         for task in tasks:
             status=task.device.plugin_name().get_task_status(task.task_id)
             task.task_status=status
