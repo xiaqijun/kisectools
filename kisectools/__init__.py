@@ -75,7 +75,7 @@ def detect_device_status():
             db.session.commit()
         print("设备状态检测完成")
 
-@scheduler.task('interval', id='task_monitor', seconds=60)#
+@scheduler.task('interval', id='task_monitor', seconds=10)#
 def task_monitor():
     with scheduler.app.app_context():
         from .models import Task
@@ -85,7 +85,7 @@ def task_monitor():
                 continue
             scheduler.add_job(
                 func=check_task_status,
-                args=[task.id, 5],  # 5秒检查一次
+                args=[task.id, 100],  # 5秒检查一次
                 id=f'task_status_{task.id}',
                 replace_existing=True,
                 trigger='date',

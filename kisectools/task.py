@@ -59,8 +59,8 @@ def del_task():
     task = Task.query.filter_by(id=task_id).first()
     if not task:
         return {"message": "任务未找到"}, 404  # 如果任务不存在，返回404错误
-    task_results=Task_result.query.filter_by(task_id=task_id).all()
-    db.session.delete(task_results)
+    Task_result.query.filter_by(task_id=task_id).delete()
+    task.device.plugin_name().delete_task(task.task_id)
     db.session.delete(task)
     db.session.commit()
     return {"message": "任务删除成功"}, 200
@@ -70,10 +70,38 @@ def del_task():
 @login_required
 def detail():
     id=request.json.get('task_id')
-    task=Task.query.get(id)
-    task_result=task.device.plugin_name().get_task_result(task.task_id)
-    print(task_result)
+    page = request.json.get('page', 1)
+    per_page = request.json.get('per_page', 10)
+
+    task = Task.query.get(id)
+    task_results_query = Task_result.query.filter_by(task_id=id)
+    total_results = task_results_query.count()
+    task_results = task_results_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    results = [
+        {
+            'host': result.host,
+            'port': result.port,
+            'status': result.status,
+            'service': result.service,
+            'create_time': result.create_time
+        } for result in task_results.items
+    ]
+
+    unique_ips = len(set(result.host for result in task_results_query))
+    total_ports = task_results_query.count()
+
     return {
-        'task_result': task_result
+        'task_name': task.task_name,
+        'task_status': task.task_status,
+        'create_time': task.create_time,
+        'user': User.query.get(task.user_id).username,
+        'device': task.device.name,
+        'unique_ips': unique_ips,
+        'total_ports': total_ports,
+        'task_result': results,
+        'page': task_results.page,
+        'per_page': task_results.per_page,
+        'total': total_results
     }
 
