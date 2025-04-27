@@ -59,7 +59,8 @@ def del_task():
     task = Task.query.filter_by(id=task_id).first()
     if not task:
         return {"message": "任务未找到"}, 404  # 如果任务不存在，返回404错误
-
+    task_results=Task_result.query.filter_by(task_id=task_id).all()
+    db.session.delete(task_results)
     db.session.delete(task)
     db.session.commit()
     return {"message": "任务删除成功"}, 200
