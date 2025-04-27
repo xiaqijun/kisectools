@@ -273,15 +273,17 @@
                                 });
                                 pagination.appendChild(li);
                             }
-
-                            const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
-                            taskDetailModal.show();
                         }
                     } catch (error) {
                         alert(error.response?.data?.error || '获取任务详情失败，请稍后重试。');
                     }
                 }
 
+                // 首次点击详情时显示模态框
+                const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
+                taskDetailModal.show();
+
+                // 加载第一页数据
                 fetchTaskDetails(page);
             });
         });
