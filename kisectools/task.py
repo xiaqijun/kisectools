@@ -61,6 +61,8 @@ def del_task():
         return {"message": "任务未找到"}, 404  # 如果任务不存在，返回404错误
     Task_result.query.filter_by(task_id=task_id).delete()
     task.device.plugin_name().delete_task(task.task_id)
+    if scheduler.get_job(id=f'task_status_{task.id}'):
+        scheduler.remove_job(id=f'task_status_{task.id}')
     db.session.delete(task)
     db.session.commit()
     return {"message": "任务删除成功"}, 200
@@ -104,4 +106,14 @@ def detail():
         'per_page': task_results.per_page,
         'total': total_results
     }
+
+@task_bp.route('/monitor',methods=['POST'])
+@login_required
+def monitor():
+    task_id = request.json.get('task_id')
+    task = Task.query.get(task_id)
+    if not task:
+        return {"message": "任务未找到"}, 404
+    task_status = task.device.plugin_name().get_task_status(task.task_id)
+    
 
