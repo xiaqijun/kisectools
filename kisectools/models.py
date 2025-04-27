@@ -38,14 +38,14 @@ class Task(db.Model):
     task_name = db.Column(db.String(150), unique=True, nullable=False)
     ip_str = db.Column(db.Text, nullable=False)
     port_str = db.Column(db.Text)
-    task_status = db.Column(db.String(10), default="等待")
+    task_status = db.Column(db.String(10), default="waiting")
     create_time = db.Column(db.DateTime, server_default=db.func.now())
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     task_id = db.Column(db.String(150), unique=True, nullable=False)
     task_results = db.relationship('Task_result', backref='task_result', lazy=True)
-    sync_flag = db.Column(db.Boolean, default=False)  # 是否同步标志
-    task_type = db.Column(db.String(50), nullable=True,default=0)  # 任务类型，1表示为监控任务，0表示为普通任务
+    sync_flag = db.Column(db.Boolean, default=False)  # 是否完成同步标志
+    task_type = db.Column(db.String(50), nullable=True, default=0)  # 任务类型，1表示为监控任务，0表示为普通任务
     schedule_interval = db.Column(db.String(50), nullable=True)  # 任务调度间隔，例如 'daily', 'hourly'
     next_run_time = db.Column(db.DateTime, nullable=True)  # 下次运行时间
 

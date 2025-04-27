@@ -7,7 +7,6 @@ from flask_wtf.csrf import CSRFProtect
 import os
 import importlib.util
 import sys
-import time
 import json
 # 初始化扩展
 db = SQLAlchemy()
@@ -23,8 +22,9 @@ def create_app(config_class='config.Config'):
     db.init_app(app)
     migrate.init_app(app, db)  # 添加 db 参数
     scheduler.init_app(app)
-    if not scheduler.running:
-        scheduler.start()
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        if not scheduler.running:
+            scheduler.start()
     # 配置 Flask-Security
     from .models import User, Role  # 假设 User 和 Role 模型已定义
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -61,10 +61,23 @@ def create_app(config_class='config.Config'):
                 spec.loader.exec_module(module)
             except Exception as e:
                 print(f"Failed to load plugin {plugin.name}: {e}")
+        # 启动定时任务
+        scheduler.add_job(
+            func=detect_device_status,
+            id='device_status_check',
+            trigger='interval',
+            seconds=60,  # 每5秒检查一次设备状态
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            func=task_monitor,
+            id='task_monitor',
+            trigger='interval',
+            seconds=60,  # 每5秒检查一次任务状态
+            replace_existing=True,
+        )
     return app
 
-
-@scheduler.task('interval', id='detect_device_status', seconds=60)#
 def detect_device_status():
     with scheduler.app.app_context():
         from .models import Devices
@@ -75,45 +88,45 @@ def detect_device_status():
             db.session.commit()
         print("设备状态检测完成")
 
-@scheduler.task('interval', id='task_monitor', seconds=10)#
+
 def task_monitor():
     with scheduler.app.app_context():
         from .models import Task
         tasks = Task.query.filter_by(sync_flag=False).all()
         for task in tasks:
+            print(scheduler.get_job(id=f'task_status_{task.id}'))
             if scheduler.get_job(id=f'task_status_{task.id}'):
                 continue
             scheduler.add_job(
                 func=check_task_status,
-                args=[task.id, 100],  # 5秒检查一次
+                args=[task.id],  # 5秒检查一次
                 id=f'task_status_{task.id}',
-                replace_existing=True,
-                trigger='date',
-                run_date=None  # 立即运行
+                trigger='interval',
+                seconds=5,
+                replace_existing=False,
             )
             print(f"任务状态监控已启动: {task.task_name} (ID: {task.id})")
 
-def check_task_status(task_id,interval):
+def check_task_status(task_id):
     from .models import Task,Task_result
     with scheduler.app.app_context():
         task=Task.query.get(task_id)
-        while True:
-            status=task.device.plugin_name().get_task_status(task.task_id)
-            task.task_status=status
-            db.session.commit()
-            if status=="finished":
-                task_result_file=task.device.plugin_name().get_task_result(task.task_id)
-                with open(task_result_file,'r') as f:
-                    for line_str in f:
-                        line=json.loads(line_str)
-                        host = line.get('host')
-                        port = line.get('port')
-                        service = line.get('service')
-                        port_status = line.get('status')
-                        db.session.add(Task_result(host=host, port=port, service=service, status=port_status, task_id=task.id))
-                    task.sync_flag=True
-                    db.session.commit()
-                break
-            time.sleep(interval)
+        status=task.device.plugin_name().get_task_status(task.task_id)
+        task.task_status=status
+        db.session.commit()
+        if status=="finished":
+            task_result_file=task.device.plugin_name().get_task_result(task.task_id)
+            with open(task_result_file,'r') as f:
+                for line_str in f:
+                    line=json.loads(line_str)
+                    host = line.get('host')
+                    port = line.get('port')
+                    service = line.get('service')
+                    port_status = line.get('status')
+                    db.session.add(Task_result(host=host, port=port, service=service, status=port_status, task_id=task.id))
+                task.sync_flag=True
+                db.session.commit()
+            scheduler.remove_job(id=f'task_status_{task.id}')        
+
         
                     
