@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template,request,current_app
 from flask_security import login_required
 from . import db,scheduler
-from .models import Task, Task_result,Devices,Plugins,User
+from .models import Task, Task_result,Devices,User,Task_result_monitor,Increase_list,Decrease_list
 from flask_security import current_user
 import time
 task_bp = Blueprint('task', __name__)
@@ -60,6 +60,9 @@ def del_task():
     if not task:
         return {"message": "任务未找到"}, 404  # 如果任务不存在，返回404错误
     Task_result.query.filter_by(task_id=task_id).delete()
+    Increase_list.query.filter_by(task_id=task_id).delete()
+    Decrease_list.query.filter_by(task_id=task_id).delete()
+    Task_result_monitor.query.filter_by(task_id=task_id).delete()
     task.device.plugin_name().delete_task(task.task_id)
     if scheduler.get_job(id=f'task_status_{task.id}'):
         scheduler.remove_job(id=f'task_status_{task.id}')
@@ -118,4 +121,15 @@ def monitor():
         return {"message": "任务未完成，请等待任务完成后再试"}, 400
     if not task.sync_flag:
         return {"message": "任务结果未同步，请等待任务结果同步后再试"}, 400
+    instance=task.device.plugin_name()
+    task_name = task.task_name
+    ip_str = task.ip_str
+    port_str = task.port_str
+    task_id = instance.create_task(task_name, ip_str, port_str)
+    task.task_id = task_id
+    task.task_status = "waiting"
+    task.sync_flag = False
+    task.task_type = 1
+    db.session.commit()
+    return {"message": "任务监控已启动", "task_id": task_id}, 200
     

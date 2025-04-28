@@ -44,15 +44,46 @@ class Task(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     task_id = db.Column(db.String(150), unique=True, nullable=False)
     task_results = db.relationship('Task_result', backref='task_result', lazy=True)
+    task_results_monitor = db.relationship('Task_result', backref='task_result_monitor', lazy=True)
+    increase_lists = db.relationship('Increase_list', backref='increase_list', lazy=True)
+    decrease_lists = db.relationship('Decrease_list', backref='decrease_list', lazy=True)
     sync_flag = db.Column(db.Boolean, default=False)  # 是否完成同步标志
     task_type = db.Column(db.String(50), nullable=True, default=0)  # 任务类型，1表示为监控任务，0表示为普通任务
-    schedule_interval = db.Column(db.String(50), nullable=True)  # 任务调度间隔，例如 'daily', 'hourly'
-    next_run_time = db.Column(db.DateTime, nullable=True)  # 下次运行时间
+    schedule_interval = db.Column(db.Integer, nullable=True, default=86400)  # 任务调度间隔，单位为秒，默认为1天（86400秒）
 
+class Increase_list(db.Model):
+    __tablename__ = 'increase_list'
+    id = db.Column(db.Integer, primary_key=True)
+    host = db.Column(db.String(150), nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    service = db.Column(db.String(150), nullable=False)
+    create_time = db.Column(db.DateTime, server_default=db.func.now())
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+
+class Decrease_list(db.Model):
+    __tablename__ = 'decrease_list'
+    id = db.Column(db.Integer, primary_key=True)
+    host = db.Column(db.String(150), nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    service = db.Column(db.String(150), nullable=False)
+    create_time = db.Column(db.DateTime, server_default=db.func.now())
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
     
 
 class Task_result(db.Model):
     __tablename__ = 'task_result'
+    id = db.Column(db.Integer, primary_key=True)
+    host = db.Column(db.String(150), nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    service = db.Column(db.String(150), nullable=False)
+    create_time = db.Column(db.DateTime, server_default=db.func.now())
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+
+class Task_result_monitor(db.Model):
+    __tablename__ = 'task_result_monitor'
     id = db.Column(db.Integer, primary_key=True)
     host = db.Column(db.String(150), nullable=False)
     port = db.Column(db.String(150), nullable=False)

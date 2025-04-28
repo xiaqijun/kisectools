@@ -108,13 +108,13 @@ def task_monitor():
             print(f"任务状态监控已启动: {task.task_name} (ID: {task.id})")
 
 def check_task_status(task_id):
-    from .models import Task,Task_result
+    from .models import Task,Task_result,Task_result_monitor,Increase_list,Decrease_list
     with scheduler.app.app_context():
         task=Task.query.get(task_id)
         status=task.device.plugin_name().get_task_status(task.task_id)
         task.task_status=status
         db.session.commit()
-        if status=="finished":
+        if status=="finished" and not task.task_type:
             task_result_file=task.device.plugin_name().get_task_result(task.task_id)
             with open(task_result_file,'r') as f:
                 for line_str in f:
@@ -126,7 +126,45 @@ def check_task_status(task_id):
                     db.session.add(Task_result(host=host, port=port, service=service, status=port_status, task_id=task.id))
                 task.sync_flag=True
                 db.session.commit()
-            scheduler.remove_job(id=f'task_status_{task.id}')        
-
-        
-                    
+            scheduler.remove_job(id=f'task_status_{task.id}')
+        elif status=="finished" and task.task_type:
+            task._result_file=task.device.plugin_name().get_task_result(task.task_id)
+            with open(task._result_file, 'r') as f:
+                for line_str in f:
+                    line = json.loads(line_str)
+                    host = line.get('host')
+                    port = line.get('port')
+                    service = line.get('service')
+                    port_status = line.get('status')
+                    db.session.add(Task_result_monitor(host=host, port=port, service=service, status=port_status, task_id=task.id))
+                task.sync_flag = True
+                db.session.commit()
+            decrease_list= db.session.query(Task_result).filter(
+                Task_result.task_id == task.id,
+                ~db.session.query(Task_result_monitor.id)
+                .filter(
+                    Task_result_monitor.host == Task_result.host,
+                    Task_result_monitor.port == Task_result.port,
+                    Task_result_monitor.task_id==Task_result.task_id,
+                )
+                .exists()
+            ).all()
+            increase_list=db.session.query(Task_result_monitor).filter(
+                Task_result_monitor.task_id == task.id,
+                ~db.session.query(Task_result.id)
+                .filter(
+                    Task_result.host == Task_result_monitor.host,
+                    Task_result.port == Task_result_monitor.port,
+                    Task_result.task_id==Task_result_monitor.task_id,
+                ).exists()
+            ).all()
+            Decrease_list.query.filter_by(task_id=task.id).delete()
+            Increase_list.query.filter_by(task_id=task.id).delete()
+            for item in decrease_list:
+                db.session.add(Decrease_list(host=item.host, port=item.port, service=item.service, status=item.status, task_id=task.id))
+                db.session.delete(item)
+            for item in increase_list:
+                db.session.add(Increase_list(host=item.host, port=item.port, service=item.service, status=item.status, task_id=task.id))
+                db.session.delete(item)
+            db.session.commit()
+            scheduler.remove_job(id=f'task_status_{task.id}')

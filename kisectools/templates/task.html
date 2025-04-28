@@ -286,6 +286,28 @@
                 fetchTaskDetails(page);
             });
         });
+
+        // 监控任务逻辑
+        document.querySelectorAll("button[id^='monitor_']").forEach(button => {
+            button.addEventListener("click", async function () {
+                const taskId = this.id.split('_')[1];
+                try {
+                    const response = await axios.post('/task/monitor', { task_id: taskId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials: true
+                    });
+
+                    if (response.status === 200) {
+                        alert('任务监控已启动！');
+                    }
+                } catch (error) {
+                    alert(error.response?.data?.error || '启动任务监控失败，请稍后重试。');
+                }
+            });
+        });
+        
     });
 </script>
 {% endblock %}
