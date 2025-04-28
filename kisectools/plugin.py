@@ -189,3 +189,32 @@ def query_plugin():
         return responses,200
     else:
         return {"error": "插件不存在"}, 404
+
+@plugin_bp.route("/update_plugin",methods=["POST"])
+@login_required
+def update_plugin():
+    plugin_id = request.json.get("plugin_id")
+    plugin = Plugins.query.get(plugin_id)
+    if plugin:
+        try:
+            # 拉取最新代码
+            plugin_path = plugin.file_url
+            subprocess.run(['git', '-C', plugin_path, 'pull'], check=True)
+            # 更新插件状态为禁用（需要重新启用以加载新代码）
+            plugin_path = os.path.join(plugin.file_url, f"{plugin.name}.py")
+            module_name = f"{plugin.name}"
+            spec = importlib.util.spec_from_file_location(module_name, plugin_path) 
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+            # 插件加载成功，更新状态
+            class_name = plugin.class_name
+            plugin_class = getattr(sys.modules[module_name], class_name, None) 
+            if not plugin_class:
+                return {"error": "插件类不存在"}, 500
+            db.session.commit()
+            return {"message": "插件更新成功"}, 200
+        except subprocess.CalledProcessError as e:
+            return {"error": f"插件更新失败：{str(e)}"}, 500
+    else:
+        return {"error": "插件不存在"}, 404

@@ -55,7 +55,9 @@
                     {% else %}
                     <button id="enable_{{plugin.id}}" class="btn btn-sm btn-primary">启用</button>
                     {% endif %}
+                    <button id="update_{{plugin.id}}" class="btn btn-sm btn-warning">更新</button>
                     <button id="delete_{{plugin.id}}" class="btn btn-sm btn-danger">删除</button>
+                    
                 </td>
             </tr>
             {% endfor %}
@@ -170,6 +172,27 @@
                     } catch (error) {
                         alert(error.response?.data?.error || '删除插件失败，请稍后重试。');
                     }
+                }
+            });
+        });
+
+        const updateButtons = document.querySelectorAll("button[id^='update_']");
+        updateButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const pluginId = this.id.split('_')[1];
+                try {
+                    const response = await axios.post('/plugin/update_plugin', { plugin_id: pluginId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials: true
+                    });
+                    if (response.status === 200) {
+                        alert(response.data.message || '插件已更新！');
+                        location.reload();
+                    }
+                } catch (error) {
+                    alert(error.response?.data?.error || '更新插件失败，请稍后重试。');
                 }
             });
         });

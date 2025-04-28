@@ -114,6 +114,8 @@ def monitor():
     task = Task.query.get(task_id)
     if not task:
         return {"message": "任务未找到"}, 404
-    task_status = task.device.plugin_name().get_task_status(task.task_id)
+    if not task.task_status == 'finished':
+        return {"message": "任务未完成，请等待任务完成后再试"}, 400
+    if not task.sync_flag:
+        return {"message": "任务结果未同步，请等待任务结果同步后再试"}, 400
     
-
