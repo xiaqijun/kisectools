@@ -165,9 +165,9 @@ def check_task_status(task_id):
             Increase_list.query.filter_by(task_id=task.id).delete()
             for item in decrease_list:
                 db.session.add(Decrease_list(host=item.host, port=item.port, service=item.service, status=item.status, task_id=task.id))
-                db.session.delete(item)
+                Task_result.query.filter_by(host=item.host, port=item.port, task_id=task.id).delete()
             for item in increase_list:
                 db.session.add(Increase_list(host=item.host, port=item.port, service=item.service, status=item.status, task_id=task.id))
-                db.session.delete(item)
+                db.session.add(Task_result(host=item.host, port=item.port, service=item.service, status=item.status, task_id=task.id))
             db.session.commit()
             scheduler.remove_job(id=f'task_status_{task.id}')
