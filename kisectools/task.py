@@ -77,7 +77,6 @@ def detail():
     id=request.json.get('task_id')
     page = request.json.get('page', 1)
     per_page = request.json.get('per_page', 10)
-
     task = Task.query.get(id)
     task_results_query = Task_result.query.filter_by(task_id=id)
     total_results = task_results_query.count()

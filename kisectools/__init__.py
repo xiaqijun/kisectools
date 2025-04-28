@@ -114,7 +114,8 @@ def check_task_status(task_id):
         status=task.device.plugin_name().get_task_status(task.task_id)
         task.task_status=status
         db.session.commit()
-        if status=="finished" and not task.task_type:
+        if status=="finished" and task.task_type=='0':
+            print("开始首次同步")
             task_result_file=task.device.plugin_name().get_task_result(task.task_id)
             with open(task_result_file,'r') as f:
                 for line_str in f:
@@ -127,9 +128,11 @@ def check_task_status(task_id):
                 task.sync_flag=True
                 db.session.commit()
             scheduler.remove_job(id=f'task_status_{task.id}')
-        elif status=="finished" and task.task_type:
+        elif status=="finished" and task.task_type=='1':
+            print("开始增量同步")
             task._result_file=task.device.plugin_name().get_task_result(task.task_id)
             with open(task._result_file, 'r') as f:
+                Task_result_monitor.query.filter_by(task_id=task_id).delete()
                 for line_str in f:
                     line = json.loads(line_str)
                     host = line.get('host')
