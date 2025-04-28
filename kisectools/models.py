@@ -44,7 +44,7 @@ class Task(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     task_id = db.Column(db.String(150), unique=True, nullable=False)
     task_results = db.relationship('Task_result', backref='task_result', lazy=True)
-    task_results_monitor = db.relationship('Task_result', backref='task_result_monitor', lazy=True)
+    task_results_monitor = db.relationship('Task_result_monitor', backref='task_result_monitor', lazy=True)
     increase_lists = db.relationship('Increase_list', backref='increase_list', lazy=True)
     decrease_lists = db.relationship('Decrease_list', backref='decrease_list', lazy=True)
     sync_flag = db.Column(db.Boolean, default=False)  # 是否完成同步标志
