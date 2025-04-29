@@ -126,9 +126,68 @@ def monitor():
     db.session.commit()
     return {"message": "任务监控已启动", "task_id": task_id}, 200
 
+@task_bp.route('/increase', methods=['POST'])
+@login_required
+def get_increase():
+    task_id = request.json.get('task_id')
+    page = request.json.get('page', 1)
+    per_page = request.json.get('per_page', 10)
+
+    increase_query = Increase_list.query.filter_by(task_id=task_id)
+    total_increase = increase_query.count()
+    increase_items = increase_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    results = [
+        {
+            'host': item.host,
+            'port': item.port,
+            'status': item.status,
+            'service': item.service,
+            'create_time': item.create_time
+        } for item in increase_items.items
+    ]
+
+    return {
+        'task_id': task_id,
+        'total': total_increase,
+        'page': increase_items.page,
+        'per_page': increase_items.per_page,
+        'data': results
+    }, 200
+
+@task_bp.route('/decrease', methods=['POST'])
+@login_required
+def get_decrease():
+    task_id = request.json.get('task_id')
+    page = request.json.get('page', 1)
+    per_page = request.json.get('per_page', 10)
+
+    decrease_query = Decrease_list.query.filter_by(task_id=task_id)
+    total_decrease = decrease_query.count()
+    decrease_items = decrease_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    results = [
+        {
+            'host': item.host,
+            'port': item.port,
+            'status': item.status,
+            'service': item.service,
+            'create_time': item.create_time
+        } for item in decrease_items.items
+    ]
+
+    return {
+        'task_id': task_id,
+        'total': total_decrease,
+        'page': decrease_items.page,
+        'per_page': decrease_items.per_page,
+        'data': results
+    }, 200
 
 
 
 
 
-    
+
+
+
