@@ -314,9 +314,37 @@
                     }
                 }
 
-                document.getElementById("current-tab").addEventListener("click", () => fetchResults("current"));
-                document.getElementById("added-tab").addEventListener("click", () => fetchResults("added"));
-                document.getElementById("removed-tab").addEventListener("click", () => fetchResults("removed"));
+                let currentTab = "current"; // 当前激活的标签页
+
+                document.getElementById("current-tab").addEventListener("click", () => {
+                    if (currentTab !== "current") {
+                        const currentContainer = document.getElementById("currentResultContainer");
+                        if (currentContainer.innerHTML.trim() === "") {
+                            fetchResults("current");
+                        }
+                        currentTab = "current";
+                    }
+                });
+
+                document.getElementById("added-tab").addEventListener("click", () => {
+                    if (currentTab !== "added") {
+                        const addedContainer = document.getElementById("addedResultContainer");
+                        if (addedContainer.innerHTML.trim() === "") {
+                            fetchResults("added");
+                        }
+                        currentTab = "added";
+                    }
+                });
+
+                document.getElementById("removed-tab").addEventListener("click", () => {
+                    if (currentTab !== "removed") {
+                        const removedContainer = document.getElementById("removedResultContainer");
+                        if (removedContainer.innerHTML.trim() === "") {
+                            fetchResults("removed");
+                        }
+                        currentTab = "removed";
+                    }
+                });
 
                 fetchResults("current"); // 默认加载当前结果
             });
