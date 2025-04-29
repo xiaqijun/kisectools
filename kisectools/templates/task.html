@@ -226,12 +226,15 @@
                 const taskId = this.id.split('_')[1];
                 const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
                 taskDetailModal.show();
-
+                let isFetching = false; // 防止重复请求
                 async function fetchResults(type, page = 1, perPage = 10) {
+                    if (isFetching) return; // 如果正在请求，直接返回
+                    isFetching = true; // 设置为正在请求
                     const containerId = `${type}ResultContainer`;
                     const container = document.getElementById(containerId);
                     if (!container) {
                         console.error(`Element with ID ${containerId} not found.`);
+                        isFetching = false; // 请求结束
                         return;
                     }
 
@@ -251,7 +254,7 @@
 
                         if (response.status === 200) {
                             const data = response.data;
-                            console.log(data)
+                            console.log(data);
                             container.innerHTML = "";
 
                             if (data && data.results && Array.isArray(data.results)) {
@@ -306,6 +309,8 @@
                     } catch (error) {
                         console.error(error);
                         alert(error.response?.data?.error || `获取${type}结果失败，请稍后重试。`);
+                    } finally {
+                        isFetching = false; // 请求结束
                     }
                 }
 
