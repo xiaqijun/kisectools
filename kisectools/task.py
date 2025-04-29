@@ -74,11 +74,11 @@ def del_task():
 @task_bp.route('/detail',methods=['POST'])
 @login_required
 def detail():
-    id=request.json.get('task_id')
+    task_id = request.json.get('task_id')
     page = request.json.get('page', 1)
     per_page = request.json.get('per_page', 10)
-    task = Task.query.get(id)
-    task_results_query = Task_result.query.filter_by(task_id=id)
+
+    task_results_query = Task_result.query.filter_by(task_id=task_id)
     total_results = task_results_query.count()
     task_results = task_results_query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -92,22 +92,13 @@ def detail():
         } for result in task_results.items
     ]
 
-    unique_ips = len(set(result.host for result in task_results_query))
-    total_ports = task_results_query.count()
-
     return {
-        'task_name': task.task_name,
-        'task_status': task.task_status,
-        'create_time': task.create_time,
-        'user': User.query.get(task.user_id).username,
-        'device': task.device.name,
-        'unique_ips': unique_ips,
-        'total_ports': total_ports,
-        'task_result': results,
+        'task_id': task_id,
+        'total': total_results,
         'page': task_results.page,
         'per_page': task_results.per_page,
-        'total': total_results
-    }
+        'results': results
+    }, 200
 
 @task_bp.route('/monitor',methods=['POST'])
 @login_required
@@ -152,7 +143,7 @@ def get_increase():
         'total': total_increase,
         'page': increase_items.page,
         'per_page': increase_items.per_page,
-        'data': results
+        'results': results
     }, 200
 
 @task_bp.route('/decrease', methods=['POST'])
@@ -181,7 +172,7 @@ def get_decrease():
         'total': total_decrease,
         'page': decrease_items.page,
         'per_page': decrease_items.per_page,
-        'data': results
+        'results': results
     }, 200
 
 

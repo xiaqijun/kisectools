@@ -107,40 +107,35 @@
     </p>
 
     <div id="taskDetailModal" class="modal fade" tabindex="-1" aria-labelledby="taskDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg" style="max-width: 70%;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="taskDetailModalLabel">任务详情</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <style>
-                        #taskDetailModal .modal-dialog {
-                            max-width: 70%; /* 设置模态框宽度为90% */
-                        }
-                    </style>
-                    <p><strong>统计：</strong>IP存活: <span id="detailUniqueIPs"></span>个，端口存活数: <span id="detailTotalPorts"></span>个</p>
-
-                    <p><strong>任务结果:</strong></p>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>主机</th>
-                                <th>端口</th>
-                                <th>状态</th>
-                                <th>服务</th>
-                                <th>创建时间</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detailTaskResultTable">
-                            <!-- 动态填充任务结果 -->
-                        </tbody>
-                    </table>
-                    <nav>
-                        <ul class="pagination" id="pagination">
-                            <!-- 动态生成分页按钮 -->
-                        </ul>
-                    </nav>
+                    <ul class="nav nav-tabs" id="taskDetailTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="current-tab" data-bs-toggle="tab" data-bs-target="#current" type="button" role="tab" aria-controls="current" aria-selected="true">全部</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="added-tab" data-bs-toggle="tab" data-bs-target="#added" type="button" role="tab" aria-controls="added" aria-selected="false">新增</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="removed-tab" data-bs-toggle="tab" data-bs-target="#removed" type="button" role="tab" aria-controls="removed" aria-selected="false">减少</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="taskDetailTabsContent">
+                        <div class="tab-pane fade show active" id="current" role="tabpanel" aria-labelledby="current-tab">
+                            <div id="currentResultContainer"></div>
+                        </div>
+                        <div class="tab-pane fade" id="added" role="tabpanel" aria-labelledby="added-tab">
+                            <div id="addedResultContainer"></div>
+                        </div>
+                        <div class="tab-pane fade" id="removed" role="tabpanel" aria-labelledby="removed-tab">
+                            <div id="removedResultContainer"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -229,12 +224,25 @@
         document.querySelectorAll("button[id^='detail_']").forEach(button => {
             button.addEventListener("click", async function () {
                 const taskId = this.id.split('_')[1];
-                const page = 1; // 默认第一页
-                const perPage = 10; // 每页显示10条
+                const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
+                taskDetailModal.show();
 
-                async function fetchTaskDetails(page) {
+                async function fetchResults(type, page = 1, perPage = 10) {
+                    const containerId = `${type}ResultContainer`;
+                    const container = document.getElementById(containerId);
+                    if (!container) {
+                        console.error(`Element with ID ${containerId} not found.`);
+                        return;
+                    }
+
                     try {
-                        const response = await axios.post('/task/detail', { task_id: taskId, page, per_page: perPage }, {
+                        const endpointMap = {
+                            current: '/task/detail',
+                            added: '/task/increase',
+                            removed: '/task/decrease'
+                        };
+
+                        const response = await axios.post(endpointMap[type], { task_id: taskId, page, per_page: perPage }, {
                             headers: {
                                 'Content-Type': 'application/json',
                             },
@@ -243,47 +251,69 @@
 
                         if (response.status === 200) {
                             const data = response.data;
-                            document.getElementById("detailUniqueIPs").textContent = data.unique_ips;
-                            document.getElementById("detailTotalPorts").textContent = data.total_ports;
+                            console.log(data)
+                            container.innerHTML = "";
 
-                            const resultTable = document.getElementById("detailTaskResultTable");
-                            resultTable.innerHTML = "";
-                            data.task_result.forEach(result => {
-                                const row = document.createElement("tr");
-                                row.innerHTML = `
-                                    <td>${result.host}</td>
-                                    <td>${result.port}</td>
-                                    <td>${result.status}</td>
-                                    <td>${result.service}</td>
-                                    <td>${new Date(result.create_time).toLocaleString()}</td>
+                            if (data && data.results && Array.isArray(data.results)) {
+                                const table = document.createElement("table");
+                                table.className = "table table-bordered";
+                                table.innerHTML = `
+                                    <thead>
+                                        <tr>
+                                            <th>主机</th>
+                                            <th>端口</th>
+                                            <th>状态</th>
+                                            <th>服务</th>
+                                            <th>创建时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.results.map(result => `
+                                            <tr>
+                                                <td>${result.host || 'N/A'}</td>
+                                                <td>${result.port || 'N/A'}</td>
+                                                <td>${result.status || 'N/A'}</td>
+                                                <td>${result.service || 'N/A'}</td>
+                                                <td>${new Date(result.create_time).toLocaleString('zh-CN', { timeZone: 'UTC' })|| 'N/A'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
                                 `;
-                                resultTable.appendChild(row);
-                            });
+                                container.appendChild(table);
 
-                            const pagination = document.getElementById("pagination");
-                            pagination.innerHTML = "";
-                            for (let i = 1; i <= Math.ceil(data.total / data.per_page); i++) {
-                                const li = document.createElement("li");
-                                li.className = `page-item ${i === data.page ? 'active' : ''}`;
-                                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-                                li.addEventListener("click", (e) => {
-                                    e.preventDefault();
-                                    fetchTaskDetails(i);
+                                const pagination = document.createElement("nav");
+                                pagination.innerHTML = `
+                                    <ul class="pagination">
+                                        ${Array.from({ length: Math.ceil(data.total / data.per_page) }, (_, i) => i + 1).map(pageNum => `
+                                            <li class="page-item ${pageNum === data.page ? 'active' : ''}">
+                                                <a class="page-link" href="#">${pageNum}</a>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                `;
+                                container.appendChild(pagination);
+
+                                pagination.querySelectorAll("a").forEach((link, index) => {
+                                    link.addEventListener("click", (e) => {
+                                        e.preventDefault();
+                                        fetchResults(type, index + 1);
+                                    });
                                 });
-                                pagination.appendChild(li);
+                            } else {
+                                container.innerHTML = "<p class='text-center'>没有数据可显示。</p>";
                             }
                         }
                     } catch (error) {
-                        alert(error.response?.data?.error || '获取任务详情失败，请稍后重试。');
+                        console.error(error);
+                        alert(error.response?.data?.error || `获取${type}结果失败，请稍后重试。`);
                     }
                 }
 
-                // 首次点击详情时显示模态框
-                const taskDetailModal = new bootstrap.Modal(document.getElementById("taskDetailModal"));
-                taskDetailModal.show();
+                document.getElementById("current-tab").addEventListener("click", () => fetchResults("current"));
+                document.getElementById("added-tab").addEventListener("click", () => fetchResults("added"));
+                document.getElementById("removed-tab").addEventListener("click", () => fetchResults("removed"));
 
-                // 加载第一页数据
-                fetchTaskDetails(page);
+                fetchResults("current"); // 默认加载当前结果
             });
         });
 
