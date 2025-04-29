@@ -303,7 +303,7 @@
                         alert('任务监控已启动！');
                     }
                 } catch (error) {
-                    alert(error.response?.data?.error || '启动任务监控失败，请稍后重试。');
+                    alert(error.response?.data?.message || '启动任务监控失败，请稍后重试。');
                 }
             });
         });

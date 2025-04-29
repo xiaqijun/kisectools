@@ -8,6 +8,7 @@ import os
 import importlib.util
 import sys
 import json
+from datetime import datetime,timezone,timedelta
 # 初始化扩展
 db = SQLAlchemy()
 scheduler = APScheduler()
@@ -94,7 +95,6 @@ def task_monitor():
         from .models import Task
         tasks = Task.query.filter_by(sync_flag=False).all()
         for task in tasks:
-            print(scheduler.get_job(id=f'task_status_{task.id}'))
             if scheduler.get_job(id=f'task_status_{task.id}'):
                 continue
             scheduler.add_job(
@@ -105,7 +105,38 @@ def task_monitor():
                 seconds=5,
                 replace_existing=False,
             )
-            print(f"任务状态监控已启动: {task.task_name} (ID: {task.id})")
+            print(f"已启动任务结果监控: {task.task_name} (ID: {task.id})")
+
+        tasks=Task.query.filter_by(task_type='1').all()
+        for task in tasks:
+            if scheduler.get_job(id=f'monitor_task_{task.id}'):
+                print(f"任务监控已存在: {task.task_name} (ID: {task.id})")
+                continue
+            scheduler.add_job(
+                func=create_monitor_task,
+                args=[task.id],
+                id=f'monitor_task_{task.id}',
+                trigger='interval',
+                seconds=5,
+                replace_existing=False
+            )
+            print(f"已启动周期任务监控: {task.task_name} (ID: {task.id})")
+
+def create_monitor_task(task_id):
+    with scheduler.app.app_context():
+        from .models import Task
+        task = Task.query.get(task_id)
+        if task.next_run_time and datetime.now() >= task.next_run_time and task.sync_flag:
+            instance = task.device.plugin_name()
+            task_name = task.task_name
+            ip_str = task.ip_str
+            port_str = task.port_str
+            task_id = instance.create_task(task_name, ip_str, port_str)
+            task.task_id = task_id
+            task.task_status = "waiting"
+            task.sync_flag = False
+            task.next_run_time = datetime.now() + timedelta(seconds=task.schedule_interval)
+            db.session.commit()
 
 def check_task_status(task_id):
     from .models import Task,Task_result,Task_result_monitor,Increase_list,Decrease_list
@@ -126,10 +157,11 @@ def check_task_status(task_id):
                     port_status = line.get('status')
                     db.session.add(Task_result(host=host, port=port, service=service, status=port_status, task_id=task.id))
                 task.sync_flag=True
+                task.calculate_next_run_time(datetime.now())
                 db.session.commit()
             scheduler.remove_job(id=f'task_status_{task.id}')
         elif status=="finished" and task.task_type=='1':
-            print("开始增量同步")
+            print("开始差异对比")
             task._result_file=task.device.plugin_name().get_task_result(task.task_id)
             with open(task._result_file, 'r') as f:
                 Task_result_monitor.query.filter_by(task_id=task_id).delete()
@@ -141,6 +173,7 @@ def check_task_status(task_id):
                     port_status = line.get('status')
                     db.session.add(Task_result_monitor(host=host, port=port, service=service, status=port_status, task_id=task.id))
                 task.sync_flag = True
+                task.calculate_next_run_time(datetime.now())
                 db.session.commit()
             decrease_list= db.session.query(Task_result).filter(
                 Task_result.task_id == task.id,

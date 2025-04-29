@@ -2,6 +2,7 @@ from flask_security import UserMixin, RoleMixin
 from kisectools import db
 import sys
 from functools import lru_cache
+from datetime import timedelta
 
 # 定义角色模型
 class Role(db.Model, RoleMixin):
@@ -50,6 +51,14 @@ class Task(db.Model):
     sync_flag = db.Column(db.Boolean, default=False)  # 是否完成同步标志
     task_type = db.Column(db.String(50), nullable=True, default=0)  # 任务类型，1表示为监控任务，0表示为普通任务
     schedule_interval = db.Column(db.Integer, nullable=True, default=86400)  # 任务调度间隔，单位为秒，默认为1天（86400秒）
+    next_run_time = db.Column(db.DateTime, nullable=True)  # 下次运行时间
+    sart_time = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())  # 数据条目更新时间
+    def calculate_next_run_time(self, completion_time):
+        if self.sart_time:
+            time_difference = (completion_time - self.sart_time).total_seconds()
+            if time_difference > 86400:  # 1 day in seconds
+                self.schedule_interval += 1800  # Add 30 minutes in seconds
+        self.next_run_time = completion_time + timedelta(seconds=self.schedule_interval)
 
 class Increase_list(db.Model):
     __tablename__ = 'increase_list'

@@ -3,7 +3,7 @@ from flask_security import login_required
 from . import db,scheduler
 from .models import Task, Task_result,Devices,User,Task_result_monitor,Increase_list,Decrease_list
 from flask_security import current_user
-import time
+from datetime import datetime,timezone,timedelta
 task_bp = Blueprint('task', __name__)
 @task_bp.route('/', methods=['GET'])
 @login_required
@@ -120,15 +120,15 @@ def monitor():
         return {"message": "任务未完成，请等待任务完成后再试"}, 400
     if not task.sync_flag:
         return {"message": "任务结果未同步，请等待任务结果同步后再试"}, 400
-    instance=task.device.plugin_name()
-    task_name = task.task_name
-    ip_str = task.ip_str
-    port_str = task.port_str
-    task_id = instance.create_task(task_name, ip_str, port_str)
-    task.task_id = task_id
-    task.task_status = "waiting"
-    task.sync_flag = False
-    task.task_type = 1
+    if task.task_type==1:
+        return {"message":"已创建监控任务,请勿重复创建"}
+    task.task_type='1'
     db.session.commit()
     return {"message": "任务监控已启动", "task_id": task_id}, 200
+
+
+
+
+
+
     

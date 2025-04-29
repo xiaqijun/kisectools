@@ -116,6 +116,7 @@ def query_device():
         'token': device.token
     }
     return response, 200
+
 @device_bp.route('/query_all_device', methods=['GET'])
 @login_required
 def query_all_devices():
