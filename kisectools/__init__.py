@@ -107,7 +107,7 @@ def task_monitor():
             )
             print(f"已启动任务结果监控: {task.task_name} (ID: {task.id})")
 
-        tasks=Task.query.filter_by(task_type='1').all()
+        tasks = Task.query.filter(Task.task_type == '1', Task.next_run_time <= datetime.now()).all()
         for task in tasks:
             if scheduler.get_job(id=f'monitor_task_{task.id}'):
                 print(f"任务监控已存在: {task.task_name} (ID: {task.id})")
