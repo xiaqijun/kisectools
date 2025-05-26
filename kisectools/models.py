@@ -139,3 +139,15 @@ class Devices(db.Model):
         except Exception as e:
             return {"error": f"插件实例化失败: {str(e)}"}, 400
         return instance
+
+class Assets(db.Model):
+    __tablename__ = 'assets'
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(150), unique=True, nullable=False)
+    port = db.Column(db.String(150), nullable=False)
+    service = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    banner = db.Column(db.Text, nullable=True)
+    create_time = db.Column(db.DateTime, server_default=db.func.now())
+    update_time = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+
