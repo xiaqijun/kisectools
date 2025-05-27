@@ -36,6 +36,8 @@ def create_app(config_class='config.Config'):
     app.register_blueprint(plugin_bp, url_prefix='/plugin')  # 注册插件相关的蓝图
     from .device import device_bp  # 导入设备相关的蓝图
     app.register_blueprint(device_bp, url_prefix='/device')  # 注册设备相关的蓝图
+    from .vulnerability import vulnerability_bp  # 导入漏洞相关的蓝图
+    app.register_blueprint(vulnerability_bp, url_prefix='/vulnerability')  # 注册漏洞相关的蓝图
     # 确保数据库表已创建
     with app.app_context():
         db.create_all()

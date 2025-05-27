@@ -150,4 +150,19 @@ class Assets(db.Model):
     banner = db.Column(db.Text, nullable=True)
     create_time = db.Column(db.DateTime, server_default=db.func.now())
     update_time = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    vulnerabilities = db.relationship('Vulnerability', secondary='asset_vulnerability', backref=db.backref('assets', lazy='dynamic'))
 
+class Vulnerability(db.Model):
+    __tablename__ = 'vulnerability'
+    id = db.Column(db.Integer, primary_key=True)
+    cve_id = db.Column(db.String(150), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    severity = db.Column(db.String(50), nullable=False)
+    publish_date = db.Column(db.DateTime, nullable=False)
+    update_date = db.Column(db.DateTime, nullable=False)
+
+asset_vulnerability = db.Table(
+    'asset_vulnerability',
+    db.Column('asset_id', db.Integer, db.ForeignKey('assets.id')),
+    db.Column('vulnerability_id', db.Integer, db.ForeignKey('vulnerability.id'))
+)
