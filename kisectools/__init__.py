@@ -9,6 +9,7 @@ import importlib.util
 import sys
 import json
 from datetime import datetime,timezone,timedelta
+
 # 初始化扩展
 db = SQLAlchemy()
 scheduler = APScheduler()
@@ -69,14 +70,14 @@ def create_app(config_class='config.Config'):
             func=detect_device_status,
             id='device_status_check',
             trigger='interval',
-            seconds=60,  # 每5秒检查一次设备状态
+            seconds=60,  # 每60秒检查一次设备状态
             replace_existing=True,
         )
         scheduler.add_job(
             func=task_monitor,
             id='task_monitor',
             trigger='interval',
-            seconds=60,  # 每5秒检查一次任务状态
+            seconds=60,  # 每60秒检查一次任务状态
             replace_existing=True,
         )
     return app
