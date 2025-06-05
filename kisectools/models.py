@@ -158,7 +158,6 @@ class Vulnerability(db.Model):
     cve_id = db.Column(db.String(150), unique=True, nullable=False)
     description = db.Column(db.Text, nullable=False)
     security = db.Column(db.String(50), nullable=False)  # 安全等级
-    
     publish_date = db.Column(db.DateTime, nullable=False)
     update_date = db.Column(db.DateTime, nullable=False)
 
